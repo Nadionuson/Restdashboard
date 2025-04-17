@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Restaurant {
+  id         Int     @id @default(autoincrement())
+  name       String
+  location   String
+  status     String
+  highlights String?
+  lastVisitedDate DateTime?  // <-- NEW FIELD
+  evaluation Evaluation?
+}
+
+model Evaluation {
+  id                 Int   @id @default(autoincrement())
+  locationRating     Int
+  serviceRating      Int
+  priceQualityRating Int
+  foodQualityRating  Int
+  atmosphereRating   Int
+  finalEvaluation    Float
+
+  restaurantId Int        @unique
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+}
