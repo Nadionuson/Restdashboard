@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { Console } from 'console'
 import { NextRequest, NextResponse } from 'next/server'
 
 const prisma = new PrismaClient()
@@ -19,6 +20,7 @@ export async function PUT(
         location: data.location,
         status: data.status,
         highlights: data.highlights,
+        lastVisitedDate: data.lastVisitedDate ? new Date(data.lastVisitedDate) : null,
         evaluation: {
           update: {
             locationRating: data.evaluation.locationRating,
@@ -60,6 +62,7 @@ export async function DELETE(
 
 // GET one restaurant by ID
 export async function GET(req: Request, context: { params: { id: string }} ) {
+  
   const id = parseInt(context.params.id);
 
   const restaurant = await prisma.restaurant.findUnique({

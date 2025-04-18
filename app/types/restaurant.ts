@@ -26,3 +26,5 @@ export const getFinalEvaluation = (evaluation: Evaluation): number => {
     (locationRating + serviceRating + priceQualityRating + foodQualityRating + atmosphereRating) / 5
   );
 };
+
+

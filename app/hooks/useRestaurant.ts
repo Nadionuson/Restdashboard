@@ -10,16 +10,20 @@ export const useRestaurants = () => {
 
   // Fetch restaurants on page load
   const fetchRestaurants = async () => {
+    try {
     const res = await fetch('/api/restaurants');
     const data = await res.json();
     setRestaurants(data);
     setFilteredRestaurants(data); // Initially, show all restaurants
     fetchLocations();
+    } catch(err){
+      console.error('Failed to fetch restaurants', err);
+    }
   };
 
   // Fetch locations for dropdown filter
   const fetchLocations = async () => {
-    const res = await fetch('/api/restaurants/locations');
+    const res = await fetch('/api/locations');
     const data = await res.json();
     setLocations(data.locations);
   };
@@ -28,5 +32,5 @@ export const useRestaurants = () => {
     fetchRestaurants();
   }, []);
 
-  return { restaurants, filteredRestaurants, setFilteredRestaurants, locations };
+  return { restaurants, refetch: fetchRestaurants, filteredRestaurants, setFilteredRestaurants, locations };
 };

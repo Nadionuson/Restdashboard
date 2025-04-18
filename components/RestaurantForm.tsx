@@ -6,6 +6,7 @@ import StarRating from './ui/starRating';
 
 interface RestaurantFormProps {
   initialData: Restaurant | null;
+  
   onSubmit: (restaurant: Restaurant) => void;
 }
 
@@ -119,7 +120,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
           type="date"
           value={lastVisitedDate}
           onChange={(e) => setLastVisitedDate(e.target.value)}
-          required
+          required={status === 'Tried it'}
         />
       </div>
     )}

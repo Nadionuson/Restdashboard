@@ -1,4 +1,5 @@
 // pages/Dashboard.tsx
+'use client'
 
 import { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/button';
@@ -7,9 +8,10 @@ import { RestaurantForm } from '@/components/RestaurantForm';
 import { Restaurant } from '../types/restaurant';
 import { RestaurantList } from '../../components/RestaurantList';
 import { useRestaurants } from '../hooks/useRestaurant';
+import { Client } from 'pg';
 
 export default function Dashboard() {
-  const { restaurants } = useRestaurants();
+  const { restaurants, refetch } = useRestaurants();
   const [editing, setEditing] = useState<Restaurant | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [locations, setLocations] = useState<string[]>([]); // Store distinct locations
@@ -30,11 +32,47 @@ export default function Dashboard() {
   }, []);
 
   const handleSave = async (restaurant: Restaurant) => {
-    // Implement saving logic here
+    const isEdit = restaurant.id > 0;
+    const endpoint = isEdit ? `/api/restaurants/${restaurant.id}` : '/api/restaurants';
+    const method = isEdit ? 'PUT' : 'POST';
+  
+    try {
+      const res = await fetch(endpoint, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(restaurant),
+      });
+  
+      if (!res.ok) throw new Error("Failed to save restaurant");
+  
+    await refetch(); // <-- Refresh list after save
+    setShowModal(false);
+    setEditing(null);
+
+    } catch (err) {
+      console.error(err);
+    }
   };
+  
 
   const handleDelete = async (id: number) => {
-    // Implement delete logic here
+    try {
+      // Call the DELETE API endpoint to remove the restaurant
+      const res = await fetch(`/api/restaurants/${id}`, {
+        method: 'DELETE',
+      });
+  
+      if (!res.ok) {
+        throw new Error("Failed to delete restaurant");
+      }
+
+      await refetch(); // <-- Refresh list after save
+
+    } catch (error) {
+      console.error('Error deleting restaurant:', error);
+    }
   };
 
   return (

@@ -8,6 +8,7 @@ export async function GET() {
   const restaurants = await prisma.restaurant.findMany({
     include: { evaluation: true }
   })
+  
   return NextResponse.json(restaurants)
 }
 
@@ -22,6 +23,7 @@ export async function POST(req: Request) {
       location: data.location,
       status: data.status,
       highlights: data.highlights,
+      lastVisitedDate: data.lastVisitedDate ? new Date(data.lastVisitedDate) : null,
       evaluation: {
         create: {
           locationRating: data.evaluation.locationRating,

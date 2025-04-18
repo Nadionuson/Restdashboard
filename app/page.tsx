@@ -1,7 +1,7 @@
-import { AppRoutes } from './routes/AppRoutes';
+'use client';
 
-function App() {
-  return <AppRoutes />;
+import Dashboard from './pages/Dashboard';
+
+export default function HomePage() {
+  return <Dashboard />;
 }
-
-export default App;
