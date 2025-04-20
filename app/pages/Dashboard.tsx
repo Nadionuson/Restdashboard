@@ -15,6 +15,8 @@ export default function Dashboard() {
   const [editing, setEditing] = useState<Restaurant | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [locations, setLocations] = useState<string[]>([]); // Store distinct locations
+  const [locationFilter, setLocationFilter] = useState('');
+  
 
   // Fetch distinct locations on load
   useEffect(() => {
@@ -78,6 +80,26 @@ export default function Dashboard() {
   return (
     <div className="p-4 max-w-5xl mx-auto space-y-6">
       <h1 className="text-3xl font-bold">🍽️ Restaurant Dashboard</h1>
+
+      <div className="mb-4">
+  <label htmlFor="location-filter" className="block mb-1 font-medium text-gray-700">
+    Filter by Location
+  </label>
+  <select
+    id="location-filter"
+    value={locationFilter}
+    onChange={(e) => setLocationFilter(e.target.value)}
+    className="w-full p-2 border border-gray-300 rounded"
+  >
+    <option value="">All Locations</option>
+    {locations.map((loc) => (
+      <option key={loc} value={loc}>
+        {loc}
+      </option>
+    ))}
+  </select>
+</div>
+
 
       <Button onClick={() => { setEditing(null); setShowModal(true); }}>
         Add New Restaurant
