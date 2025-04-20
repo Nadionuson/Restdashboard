@@ -33,6 +33,10 @@ export default function Dashboard() {
     fetchLocations();
   }, []);
 
+  const filteredRestaurants = locationFilter
+  ? restaurants.filter((r) => r.location === locationFilter)
+  : restaurants;
+
   const handleSave = async (restaurant: Restaurant) => {
     const isEdit = restaurant.id > 0;
     const endpoint = isEdit ? `/api/restaurants/${restaurant.id}` : '/api/restaurants';
@@ -86,18 +90,18 @@ export default function Dashboard() {
     Filter by Location
   </label>
   <select
-    id="location-filter"
-    value={locationFilter}
-    onChange={(e) => setLocationFilter(e.target.value)}
-    className="w-full p-2 border border-gray-300 rounded"
-  >
-    <option value="">All Locations</option>
-    {locations.map((loc) => (
-      <option key={loc} value={loc}>
-        {loc}
-      </option>
-    ))}
-  </select>
+  id="location-filter"
+  value={locationFilter}
+  onChange={(e) => setLocationFilter(e.target.value)}
+  className="w-full p-2 border border-gray-300 rounded"
+>
+  <option value="">All Locations</option>
+  {locations.map((loc) => (
+    <option key={loc} value={loc}>
+      {loc}
+    </option>
+  ))}
+</select>
 </div>
 
 
@@ -106,7 +110,7 @@ export default function Dashboard() {
       </Button>
 
       <RestaurantList
-        restaurants={restaurants}
+        restaurants={filteredRestaurants}
         handleDelete={handleDelete}
         setShowModal={setShowModal}
         setEditing={setEditing}
