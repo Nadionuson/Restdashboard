@@ -8,17 +8,19 @@ import { RestaurantForm } from '@/components/RestaurantForm';
 import { Restaurant } from '../types/restaurant';
 import { RestaurantList } from '../../components/RestaurantList';
 import { useRestaurants } from '../hooks/useRestaurant';
-import { Client } from 'pg';
+import { Filters } from '../../components/ui/filter';
 
 export default function Dashboard() {
   const { restaurants, refetch } = useRestaurants();
   const [editing, setEditing] = useState<Restaurant | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [locations, setLocations] = useState<string[]>([]); // Store distinct locations
+  const [locations, setLocations] = useState<string[]>([]);
   const [locationFilter, setLocationFilter] = useState('');
-  
+  const [statusFilter, setStatusFilter] = useState('');
+  const [finalEvaluationFilter, setFinalEvaluationFilter] = useState('');
+  const [nameSearchFilter, setNameSearchFilter] = useState('');  // New state for name search
 
-  // Fetch distinct locations on load
+  // Fetch locations on load
   useEffect(() => {
     const fetchLocations = async () => {
       try {
@@ -33,15 +35,23 @@ export default function Dashboard() {
     fetchLocations();
   }, []);
 
-  const filteredRestaurants = locationFilter
-  ? restaurants.filter((r) => r.location === locationFilter)
-  : restaurants;
+  const filteredRestaurants = restaurants.filter((r) => {
+    const matchesLocation = locationFilter ? r.location === locationFilter : true;
+    const matchesStatus = statusFilter ? r.status === statusFilter : true;
+    const matchesFinalEvaluation = finalEvaluationFilter
+      ? r.evaluation.finalEvaluation === Number(finalEvaluationFilter)
+      : true;
+    const matchesName = nameSearchFilter
+      ? r.name.toLowerCase().includes(nameSearchFilter.replace('*', '').toLowerCase())
+      : true;
+    return matchesLocation && matchesStatus && matchesFinalEvaluation && matchesName;
+  });
 
   const handleSave = async (restaurant: Restaurant) => {
     const isEdit = restaurant.id > 0;
     const endpoint = isEdit ? `/api/restaurants/${restaurant.id}` : '/api/restaurants';
     const method = isEdit ? 'PUT' : 'POST';
-  
+
     try {
       const res = await fetch(endpoint, {
         method,
@@ -50,31 +60,29 @@ export default function Dashboard() {
         },
         body: JSON.stringify(restaurant),
       });
-  
+
       if (!res.ok) throw new Error("Failed to save restaurant");
-  
-    await refetch(); // <-- Refresh list after save
-    setShowModal(false);
-    setEditing(null);
+
+      await refetch(); // <-- Refresh list after save
+      setShowModal(false);
+      setEditing(null);
 
     } catch (err) {
       console.error(err);
     }
   };
-  
 
   const handleDelete = async (id: number) => {
     try {
-      // Call the DELETE API endpoint to remove the restaurant
       const res = await fetch(`/api/restaurants/${id}`, {
         method: 'DELETE',
       });
-  
+
       if (!res.ok) {
         throw new Error("Failed to delete restaurant");
       }
 
-      await refetch(); // <-- Refresh list after save
+      await refetch(); // <-- Refresh list after delete
 
     } catch (error) {
       console.error('Error deleting restaurant:', error);
@@ -86,24 +94,28 @@ export default function Dashboard() {
       <h1 className="text-3xl font-bold">🍽️ Restaurant Dashboard</h1>
 
       <div className="mb-4">
-  <label htmlFor="location-filter" className="block mb-1 font-medium text-gray-700">
-    Filter by Location
-  </label>
-  <select
-  id="location-filter"
-  value={locationFilter}
-  onChange={(e) => setLocationFilter(e.target.value)}
-  className="w-full p-2 border border-gray-300 rounded"
->
-  <option value="">All Locations</option>
-  {locations.map((loc) => (
-    <option key={loc} value={loc}>
-      {loc}
-    </option>
-  ))}
-</select>
-</div>
+        <label htmlFor="name-search" className="block mb-1 font-medium text-gray-700">
+          Search by Name
+        </label>
+        <input
+          type="text"
+          id="name-search"
+          value={nameSearchFilter}
+          onChange={(e) => setNameSearchFilter(e.target.value)}
+          className="w-full p-2 border border-gray-300 rounded"
+          placeholder="Search by restaurant name"
+        />
+      </div>
 
+      <Filters
+        locations={locations}
+        locationFilter={locationFilter}
+        setLocationFilter={setLocationFilter}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        finalEvaluationFilter={finalEvaluationFilter}
+        setFinalEvaluationFilter={setFinalEvaluationFilter}
+      />
 
       <Button onClick={() => { setEditing(null); setShowModal(true); }}>
         Add New Restaurant
