@@ -8,13 +8,16 @@ datasource db {
 }
 
 model Restaurant {
-  id         Int     @id @default(autoincrement())
-  name       String
-  location   String
-  status     String
-  highlights String?
-  lastVisitedDate DateTime?  // <-- NEW FIELD
-  evaluation Evaluation?
+  id              Int         @id @default(autoincrement())
+  name            String
+  location        String
+  status          String
+  highlights      String?
+  lastVisitedDate DateTime?
+  evaluation      Evaluation?
+  hashtags        Hashtag[]   @relation("RestaurantHashtags")
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 }
 
 model Evaluation {
@@ -28,4 +31,26 @@ model Evaluation {
 
   restaurantId Int        @unique
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+}
+
+model Hashtag {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  restaurants Restaurant[] @relation("RestaurantHashtags")
+}
+
+model RestaurantHistory {
+  id              Int
+  name            String
+  location        String
+  status          String
+  highlights      String?
+  lastVisitedDate DateTime?
+  evaluation      Json
+  hashtags        Json
+  createdAt       DateTime
+  updatedAt       DateTime
+  deletedAt       DateTime @default(now())
+
+  @@id([id, deletedAt])
 }
