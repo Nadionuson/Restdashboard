@@ -1,6 +1,7 @@
 import React from 'react';
 
 interface StarRatingProps {
+  label?: string;
   value: number;          // The current rating (0-5)
   onChange: (rating: number) => void;  // Callback to update rating
 }

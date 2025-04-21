@@ -9,8 +9,8 @@ export async function PUT(
   req: NextRequest,
   context: { params: { id: string } }
 ) {
-  const id = parseInt(context.params.id)
-  const data = await req.json()
+  const id = parseInt(context.params.id);
+  const data = await req.json();
 
   try {
     const updated = await prisma.restaurant.update({
@@ -31,18 +31,26 @@ export async function PUT(
             finalEvaluation: data.evaluation.finalEvaluation,
           },
         },
+        hashtags: {
+          // Connect existing hashtags or create new ones
+          connectOrCreate: data.hashtags.map((tag: { name: string }) => ({
+            where: { name: tag.name.toUpperCase().trim() },
+            create: { name: tag.name.toUpperCase().trim() },
+          })),
+        },
       },
-      include: { evaluation: true },
-    })
+      include: { evaluation: true, hashtags: true }, // Include hashtags to verify in the response
+    });
 
-    return NextResponse.json({ message: `Restaurant ${id} updated`, data: updated })
+    return NextResponse.json({ message: `Restaurant ${id} updated`, data: updated });
   } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: 'Failed to update restaurant' }, { status: 500 })
+    console.error(error);
+    return NextResponse.json({ error: 'Failed to update restaurant' }, { status: 500 });
   }
 }
 
-// DELETE: delete a restaurant
+
+// DELETE: delete a restaurant and its related records, but keep hashtags
 export async function DELETE(
   _req: NextRequest,
   context: { params: { id: string } }
@@ -50,15 +58,40 @@ export async function DELETE(
   const id = parseInt(context.params.id)
 
   try {
-    await prisma.evaluation.deleteMany({ where: { restaurantId: id } })
-    await prisma.restaurant.delete({ where: { id } })
+    // Step 1: Disconnect the restaurant from its hashtags using their IDs
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id },
+      include: { hashtags: true }, // Fetch the associated hashtags
+    });
 
-    return NextResponse.json({ success: true })
+    if (restaurant && restaurant.hashtags) {
+      // Disconnect hashtags by their IDs
+      await prisma.restaurant.update({
+        where: { id },
+        data: {
+          hashtags: {
+            disconnect: restaurant.hashtags.map((hashtag) => ({
+              id: hashtag.id,
+            })),
+          },
+        },
+      });
+    }
+
+    // Step 2: Delete the restaurant's associated evaluation and the restaurant itself
+    await prisma.evaluation.deleteMany({ where: { restaurantId: id } });
+    const deletedRestaurant = await prisma.restaurant.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ success: true, deleted: deletedRestaurant });
   } catch (error) {
     console.error(error)
     return NextResponse.json({ error: 'Failed to delete restaurant' }, { status: 500 })
   }
 }
+
+
 
 // GET one restaurant by ID
 export async function GET(req: Request, context: { params: { id: string }} ) {
@@ -67,7 +100,7 @@ export async function GET(req: Request, context: { params: { id: string }} ) {
 
   const restaurant = await prisma.restaurant.findUnique({
     where: { id },
-    include: { evaluation: true },
+    include: { evaluation: true, hashtags: true },
   });
 
   if (!restaurant) {
