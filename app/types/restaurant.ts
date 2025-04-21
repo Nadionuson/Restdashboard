@@ -8,6 +8,10 @@ export type Evaluation = {
 };
 
 export type RestaurantStatus = 'Want to go' | 'Tried it';
+export type Hashtag = {
+  id: number;
+  name: string;
+};
 
 export type Restaurant = {
   id: number;
@@ -17,6 +21,7 @@ export type Restaurant = {
   evaluation: Evaluation;
   highlights: string;
   lastVisitedDate: Date | null; 
+  hashtags?: Hashtag[];
 };
 
 // Helper function to calculate the final evaluation
