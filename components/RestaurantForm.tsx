@@ -3,7 +3,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Restaurant, Evaluation, getFinalEvaluation, RestaurantStatus, Hashtag } from '../app/types/restaurant';
 import StarRating from './ui/starRating';
-import { HashtagSelector } from './hashtagSelector';
+import HashtagSelector from './hashtagSelector'; // Make sure the import path is correct
 
 interface RestaurantFormProps {
   initialData: Restaurant | null;
@@ -18,7 +18,6 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
   const [highlights, setHighlights] = useState('');
   const [lastVisitedDate, setLastVisitedDate] = useState<string>(() => {
     if (initialData?.lastVisitedDate) {
-      // Convert to yyyy-mm-dd string if it's a Date or ISO string
       return new Date(initialData.lastVisitedDate).toISOString().split('T')[0];
     }
     return '';
@@ -31,9 +30,17 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
     atmosphereRating: 0,
     finalEvaluation: 0,
   });
-  const [selectedHashtags, setSelectedHashtags] = useState<Hashtag[]>([]); // For storing selected hashtags
+  const [selectedHashtags, setSelectedHashtags] = useState<Hashtag[]>([]);
 
   const ALLOWED_HASHTAGS = ['Date', 'Family', 'Sangria', 'Dessert', 'Pateo', 'Rooftop'];
+
+  const handleSelectHashtag = (hashtag: Hashtag) => {
+    setSelectedHashtags((prev) => [...prev, hashtag]);
+  };
+  
+  const handleRemoveHashtag = (hashtag: Hashtag) => {
+    setSelectedHashtags((prev) => prev.filter((h) => h.id !== hashtag.id));
+  };
 
   useEffect(() => {
     if (initialData) {
@@ -42,7 +49,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       setStatus(initialData.status);
       setHighlights(initialData.highlights || '');
       setEvaluation(initialData.evaluation);
-      setSelectedHashtags(initialData.hashtags || []); // Initialize selected hashtags
+      setSelectedHashtags(initialData.hashtags || []);
     }
   }, [initialData]);
 
@@ -60,17 +67,6 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
     evaluation.atmosphereRating,
   ]);
 
-  const handleHashtagSelect = (hashtag: string) => {
-    // Check if hashtag is already selected to avoid duplicates
-    if (!selectedHashtags.some((tag) => tag.name === hashtag)) {
-      setSelectedHashtags((prev) => [...prev, { id: Date.now(), name: hashtag }]);
-    }
-  };
-
-  const handleHashtagDeselect = (hashtag: string) => {
-    setSelectedHashtags((prev) => prev.filter((tag) => tag.name !== hashtag));
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newRestaurant: Restaurant = {
@@ -81,135 +77,112 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       highlights,
       lastVisitedDate: status === 'Tried it' && lastVisitedDate ? new Date(lastVisitedDate) : null,
       evaluation,
-      hashtags: selectedHashtags, // Include selected hashtags
+      hashtags: selectedHashtags,
     };
     onSubmit(newRestaurant);
   };
 
   return (
     <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto space-y-4 px-2">
-      {/* Sticky Top Section */}
+      {/* Sticky Header */}
       <div className="sticky top-0 z-10 bg-white pb-4 border-b border-gray-200 shadow-sm backdrop-blur-md">
-        {/* Line 1: Name + Location */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Restaurant Name</label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter restaurant name"
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="location" className="block text-sm font-medium text-gray-700">Location</label>
-            <Input
-              id="location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Enter location"
-              required
-            />
-          </div>
+        <div className="text-xl font-semibold py-2">
+          {initialData ? 'Edit Restaurant' : 'Add New Restaurant'}
         </div>
-
-        {/* Line 2: Status + Last Visited Date (conditionally shown) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
-          <div>
-            <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>
-            <select
-              id="status"
-              value={status}
-              onChange={(e) => setStatus(e.target.value as RestaurantStatus)}
-              className="w-full p-2 border border-gray-300 rounded"
-            >
-              <option value="Want to go">Want to go</option>
-              <option value="Tried it">Tried it</option>
-            </select>
-          </div>
-          {status === 'Tried it' && (
-            <div>
-              <label htmlFor="lastVisitedDate" className="block text-sm font-medium text-gray-700">Last Visited Date</label>
-              <Input
-                id="lastVisitedDate"
-                type="date"
-                value={lastVisitedDate}
-                onChange={(e) => setLastVisitedDate(e.target.value)}
-                required={status === 'Tried it'}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Line 3: Final Evaluation + Save Button */}
-        <div className="py-2 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700">Final Evaluation</label>
-            <Input
-              value={evaluation.finalEvaluation.toFixed(1)}
-              disabled
-              className="bg-gray-100"
-            />
-          </div>
-          <div className="md:self-end">
-            <Button type="submit" className="mt-2 md:mt-0">
-              {initialData ? 'Save Changes' : 'Add Restaurant'}
-            </Button>
-          </div>
-        </div>
-
       </div>
-
-      {/* Hashtag Section */}
-      <div className="space-y-4">
-        <HashtagSelector
-          availableHashtags={ALLOWED_HASHTAGS}
-          selectedHashtags={selectedHashtags.map((h) => h.name)} // Send only the names for display
-          onHashtagSelect={handleHashtagSelect}
-          onHashtagDeselect={handleHashtagDeselect} onNewHashtag={function (newHashtag: string): void {
-            throw new Error('Function not implemented.');
-          } }        />
+  
+      {/* Name */}
+      <div>
+        <label className="block text-sm font-medium">Name</label>
+        <Input value={name} onChange={(e) => setName(e.target.value)} />
       </div>
-
-      {/* Rest of the scrollable content */}
-      <div className="space-y-4">
+  
+      {/* Location */}
+      <div>
+        <label className="block text-sm font-medium">Location</label>
+        <Input value={location} onChange={(e) => setLocation(e.target.value)} />
+      </div>
+  
+      {/* Status */}
+      <div>
+        <label className="block text-sm font-medium">Status</label>
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value as RestaurantStatus)}
+          className="w-full border p-2 rounded"
+        >
+          <option value="Want to go">Want to go</option>
+          <option value="Tried it">Tried it</option>
+        </select>
+      </div>
+  
+      {/* Last Visited Date */}
+      {status === 'Tried it' && (
         <div>
-          <h3 className="font-semibold text-lg">Evaluation</h3>
-          <div className="space-y-2">
-            {[ 
-              { label: 'Location', key: 'locationRating' },
-              { label: 'Service', key: 'serviceRating' },
-              { label: 'Price-Quality', key: 'priceQualityRating' },
-              { label: 'Food Quality', key: 'foodQualityRating' },
-              { label: 'Atmosphere', key: 'atmosphereRating' },
-            ].map((item) => (
-              <div key={item.key}>
-                <label className="text-sm">{item.label} Rating</label>
-                <StarRating
-                  value={evaluation[item.key as keyof Evaluation] as number}
-                  onChange={(rating) =>
-                    setEvaluation((prev) => ({
-                      ...prev,
-                      [item.key]: rating,
-                    }))
-                  }
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="highlights" className="block text-sm font-medium text-gray-700">Highlights</label>
+          <label className="block text-sm font-medium">Last Visited Date</label>
           <Input
-            id="highlights"
-            value={highlights}
-            onChange={(e) => setHighlights(e.target.value)}
-            placeholder="Enter highlights (optional)"
+            type="date"
+            value={lastVisitedDate}
+            onChange={(e) => setLastVisitedDate(e.target.value)}
+          />
+        </div>
+      )}
+  
+      {/* Highlights */}
+      <div>
+        <label className="block text-sm font-medium">Highlights</label>
+        <Input value={highlights} onChange={(e) => setHighlights(e.target.value)} />
+      </div>
+  
+      {/* Ratings */}
+      <div>
+        <label className="block text-sm font-medium">Ratings</label>
+        <div className="space-y-2">
+          <StarRating
+            label="Location"
+            value={evaluation.locationRating}
+            onChange={(value) => setEvaluation(prev => ({ ...prev, locationRating: value }))}
+          />
+          <StarRating
+            label="Service"
+            value={evaluation.serviceRating}
+            onChange={(value) => setEvaluation(prev => ({ ...prev, serviceRating: value }))}
+          />
+          <StarRating
+            label="Price/Quality"
+            value={evaluation.priceQualityRating}
+            onChange={(value) => setEvaluation(prev => ({ ...prev, priceQualityRating: value }))}
+          />
+          <StarRating
+            label="Food"
+            value={evaluation.foodQualityRating}
+            onChange={(value) => setEvaluation(prev => ({ ...prev, foodQualityRating: value }))}
+          />
+          <StarRating
+            label="Atmosphere"
+            value={evaluation.atmosphereRating}
+            onChange={(value) => setEvaluation(prev => ({ ...prev, atmosphereRating: value }))}
           />
         </div>
       </div>
+  
+      {/* Hashtags */}
+      <div>
+        <HashtagSelector
+          availableHashtags={ALLOWED_HASHTAGS}
+          selectedHashtags={selectedHashtags}
+          onSelectHashtag={handleSelectHashtag}
+          onRemoveHashtag={handleRemoveHashtag}
+        />
+      </div>
+  
+      {/* Submit Button */}
+      <div className="pt-4">
+        <Button type="submit" className="w-full">
+          {initialData ? 'Update Restaurant' : 'Add Restaurant'}
+        </Button>
+      </div>
     </form>
   );
+  
 };

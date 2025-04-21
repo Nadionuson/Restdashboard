@@ -1,75 +1,111 @@
+// components/ui/HashtagSelector.tsx
 import React, { useState } from 'react';
-import { Button } from './ui/button';
-import { HashtagModal } from './HashtagModal';
+import { Hashtag } from '@/app/types/restaurant';
 
 interface HashtagSelectorProps {
   availableHashtags: string[];
-  selectedHashtags: string[];
-  onHashtagSelect: (hashtag: string) => void;
-  onHashtagDeselect: (hashtag: string) => void;
-  onNewHashtag: (newHashtag: string) => void;
+  selectedHashtags: Hashtag[];
+  onSelectHashtag: (hashtag: Hashtag) => void;
+  onRemoveHashtag: (hashtag: Hashtag) => void;
 }
 
-export const HashtagSelector: React.FC<HashtagSelectorProps> = ({
+const HashtagSelector: React.FC<HashtagSelectorProps> = ({
   availableHashtags,
   selectedHashtags,
-  onHashtagSelect,
-  onHashtagDeselect,
-  onNewHashtag,
+  onSelectHashtag,
+  onRemoveHashtag,
 }) => {
-  const [showHashtagModal, setShowHashtagModal] = useState(false);
+  const [newHashtagName, setNewHashtagName] = useState('');
 
-  const handleAddHashtagClick = (hashtag: string) => {
-    if (selectedHashtags.includes(hashtag)) {
-      onHashtagDeselect(hashtag);
-    } else {
-      onHashtagSelect(hashtag);
-    }
+  const handleAddHashtag = () => {
+    const trimmed = newHashtagName.trim();
+
+    // Prevent adding empty or duplicate hashtags
+    if (!trimmed || selectedHashtags.some(h => h.name === trimmed)) return;
+
+    const newHashtag: Hashtag = {
+      id: Date.now(), // Temporary ID; replace with real one from backend if needed
+      name: trimmed,
+    };
+
+    onSelectHashtag(newHashtag);
+    setNewHashtagName('');
+  };
+
+  const handleSelectHashtag = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedName = e.target.value;
+    if (!selectedName || selectedHashtags.some(h => h.name === selectedName)) return;
+
+    const hashtag: Hashtag = {
+      id: Date.now(), // Temporary ID
+      name: selectedName,
+    };
+
+    onSelectHashtag(hashtag);
   };
 
   return (
     <div>
-      <h3 className="text-lg font-medium">Select Hashtags</h3>
-      <div className="space-y-2">
-        <div className="flex flex-wrap gap-2">
-          {selectedHashtags.map((hashtag) => (
-            <div key={hashtag} className="flex items-center gap-1 bg-gray-200 text-sm py-1 px-2 rounded">
-              #{hashtag}
-              <Button variant="outline" size="icon" onClick={() => onHashtagDeselect(hashtag)}>
-                X
-              </Button>
-            </div>
-          ))}
-        </div>
-        <div>
-          <h4 className="font-semibold">Available Hashtags</h4>
-          <div className="space-y-1">
+      {/* Select Hashtags Dropdown */}
+      <div>
+        <label htmlFor="hashtag" className="block text-sm font-medium text-gray-700">Select Hashtags</label>
+        <div className="space-y-2">
+          <select
+            id="hashtag"
+            className="w-full p-2 border border-gray-300 rounded"
+            onChange={handleSelectHashtag}
+            value=""
+          >
+            <option value="" disabled>Select a hashtag</option>
             {availableHashtags.map((hashtag) => (
-              <div
-                key={hashtag}
-                className={`cursor-pointer py-1 px-2 rounded ${
-                  selectedHashtags.includes(hashtag) ? 'bg-blue-500 text-white' : 'bg-gray-100'
-                }`}
-                onClick={() => handleAddHashtagClick(hashtag)}
-              >
+              <option key={hashtag} value={hashtag}>
                 #{hashtag}
-              </div>
+              </option>
             ))}
-          </div>
+          </select>
         </div>
-        <Button onClick={() => setShowHashtagModal(true)} variant="outline" className="mt-2">
-          + Add New Hashtag
-        </Button>
       </div>
 
-      <HashtagModal
-        isOpen={showHashtagModal}
-        onClose={() => setShowHashtagModal(false)}
-        onCreate={(newHashtag) => {
-          onNewHashtag(newHashtag);
-          setShowHashtagModal(false);
-        }}
-      />
+      {/* Add New Hashtag */}
+      <div className="mt-4">
+        <label htmlFor="newHashtag" className="block text-sm font-medium text-gray-700">Add New Hashtag</label>
+        <div className="flex space-x-2">
+          <input
+            id="newHashtag"
+            type="text"
+            value={newHashtagName}
+            onChange={(e) => setNewHashtagName(e.target.value)}
+            className="border p-2 rounded"
+            placeholder="New hashtag"
+          />
+          <button
+            type="button"
+            onClick={handleAddHashtag}
+            className="bg-blue-500 text-white p-2 rounded"
+          >
+            Add
+          </button>
+        </div>
+      </div>
+
+      {/* Display Selected Hashtags */}
+      <div className="mt-4">
+        <h4 className="font-medium">Selected Hashtags</h4>
+        <div className="flex flex-wrap gap-2">
+          {selectedHashtags.map((hashtag) => (
+            <button
+              key={hashtag.id}
+              type="button"
+              onClick={() => onRemoveHashtag(hashtag)}
+              className="bg-red-500 text-white px-2 py-1 rounded"
+            >
+              #{hashtag.name} &times;
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
+
+export default HashtagSelector;
