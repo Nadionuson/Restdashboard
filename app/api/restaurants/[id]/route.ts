@@ -32,10 +32,8 @@ export async function PUT(
           },
         },
         hashtags: {
-          // Connect existing hashtags or create new ones
-          connectOrCreate: data.hashtags.map((tag: { name: string }) => ({
-            where: { name: tag.name.toUpperCase().trim() },
-            create: { name: tag.name.toUpperCase().trim() },
+          set: data.hashtags.map((tag: { name: string }) => ({
+            name: tag.name.toUpperCase().trim(),
           })),
         },
       },
