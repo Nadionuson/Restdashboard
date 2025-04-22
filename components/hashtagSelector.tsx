@@ -1,9 +1,8 @@
-// components/ui/HashtagSelector.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Hashtag } from '@/app/types/restaurant';
 
 interface HashtagSelectorProps {
-  availableHashtags: string[];
+  availableHashtags: Hashtag[];
   selectedHashtags: Hashtag[];
   onSelectHashtag: (hashtag: Hashtag) => void;
   onRemoveHashtag: (hashtag: Hashtag) => void;
@@ -16,6 +15,8 @@ const HashtagSelector: React.FC<HashtagSelectorProps> = ({
   onRemoveHashtag,
 }) => {
   const [newHashtagName, setNewHashtagName] = useState('');
+  const [selectedHashtag, setSelectedHashtag] = useState<string>(''); // Track the selected hashtag
+  
 
   const handleAddHashtag = () => {
     const trimmed = newHashtagName.trim();
@@ -42,8 +43,10 @@ const HashtagSelector: React.FC<HashtagSelectorProps> = ({
     };
 
     onSelectHashtag(hashtag);
+    setSelectedHashtag(selectedName); // Update the selected hashtag state
   };
 
+  console.log("Available Hashtags:", availableHashtags);
   return (
     <div>
       {/* Select Hashtags Dropdown */}
@@ -54,12 +57,12 @@ const HashtagSelector: React.FC<HashtagSelectorProps> = ({
             id="hashtag"
             className="w-full p-2 border border-gray-300 rounded"
             onChange={handleSelectHashtag}
-            value=""
+            value={selectedHashtag} // Set the selected value here
           >
             <option value="" disabled>Select a hashtag</option>
             {availableHashtags.map((hashtag) => (
-              <option key={hashtag} value={hashtag}>
-                #{hashtag}
+              <option key={hashtag.id} value={hashtag.name}>  {/* Using id for key */}
+               #{hashtag.name} 
               </option>
             ))}
           </select>
@@ -94,7 +97,7 @@ const HashtagSelector: React.FC<HashtagSelectorProps> = ({
         <div className="flex flex-wrap gap-2">
           {selectedHashtags.map((hashtag) => (
             <button
-              key={hashtag.id}
+              key={hashtag.id}  
               type="button"
               onClick={() => onRemoveHashtag(hashtag)}
               className="bg-red-500 text-white px-2 py-1 rounded"

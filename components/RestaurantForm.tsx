@@ -32,6 +32,8 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
   });
   const [selectedHashtags, setSelectedHashtags] = useState<Hashtag[]>([]);
 
+  const [availableHashtags, setAvailableHashtags] = useState<Hashtag[]>([]);
+
   const ALLOWED_HASHTAGS = ['Date', 'Family', 'Sangria', 'Dessert', 'Pateo', 'Rooftop'];
 
   const handleSelectHashtag = (hashtag: Hashtag) => {
@@ -41,6 +43,23 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
   const handleRemoveHashtag = (hashtag: Hashtag) => {
     setSelectedHashtags((prev) => prev.filter((h) => h.id !== hashtag.id));
   };
+
+  useEffect(() => {
+    const fetchHashtags = async () => {
+      try {
+
+        const res = await fetch('/api/hashtags');
+        const data = await res.json();
+        
+        setAvailableHashtags(data);
+        
+      } catch (err) {
+        console.error('Failed to load hashtags', err);
+      }
+    };
+  
+    fetchHashtags();
+  }, []);
 
   useEffect(() => {
     if (initialData) {
@@ -169,7 +188,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       {/* Hashtags */}
       <div>
         <HashtagSelector
-          availableHashtags={ALLOWED_HASHTAGS}
+          availableHashtags={availableHashtags}
           selectedHashtags={selectedHashtags}
           onSelectHashtag={handleSelectHashtag}
           onRemoveHashtag={handleRemoveHashtag}

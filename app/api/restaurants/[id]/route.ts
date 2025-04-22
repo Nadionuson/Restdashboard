@@ -2,19 +2,26 @@ import { PrismaClient } from '@prisma/client'
 import { Console } from 'console'
 import { NextRequest, NextResponse } from 'next/server'
 
+
 const prisma = new PrismaClient()
+
+type Context = {
+  params: {
+    id: string;
+  };
+};
 
 // PUT: update a restaurant
 export async function PUT(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
-  const id = parseInt(context.params.id);
+  const restaurantId = parseInt(params.id);
   const data = await req.json();
 
   try {
     const updated = await prisma.restaurant.update({
-      where: { id },
+      where: { id: restaurantId },
       data: {
         name: data.name,
         location: data.location,
@@ -32,18 +39,29 @@ export async function PUT(
           },
         },
         hashtags: {
-          set: data.hashtags.map((tag: { name: string }) => ({
-            name: tag.name.toUpperCase().trim(),
+          connectOrCreate: data.hashtags.map((tag: { name: string }) => ({
+            where: {
+              name: tag.name.toUpperCase().trim(),
+            },
+            create: {
+              name: tag.name.toUpperCase().trim(),
+            },
           })),
         },
       },
-      include: { evaluation: true, hashtags: true }, // Include hashtags to verify in the response
+      include: { evaluation: true, hashtags: true },
     });
 
-    return NextResponse.json({ message: `Restaurant ${id} updated`, data: updated });
+    return NextResponse.json({
+      message: `Restaurant ${restaurantId} updated`,
+      data: updated,
+    });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: 'Failed to update restaurant' }, { status: 500 });
+    console.error('[PUT /api/restaurants/[id]]', error);
+    return NextResponse.json(
+      { error: 'Failed to update restaurant' },
+      { status: 500 }
+    );
   }
 }
 
