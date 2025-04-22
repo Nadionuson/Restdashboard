@@ -11,6 +11,7 @@ type Context = {
   };
 };
 
+
 // PUT: update a restaurant
 export async function PUT(
   req: NextRequest,
@@ -20,6 +21,44 @@ export async function PUT(
   const data = await req.json();
 
   try {
+    // Fetch the current hashtags of the restaurant
+    const currentRestaurant = await prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+      include: { hashtags: true },
+    });
+
+    const currentHashtagNames = currentRestaurant?.hashtags.map((tag) => tag.name.toLowerCase().trim()) || [];
+    const newHashtags = data.hashtags.map((tag: { name: string }) => tag.name.toLowerCase().trim());
+
+    // 1. Determine hashtags to create (new hashtags not in the current list)
+    const hashtagsToCreate = newHashtags.filter((tag: string) => !currentHashtagNames.includes(tag));
+    
+    // 2. Determine hashtags to connect (hashtags that are already in the database)
+    const hashtagsToConnect = newHashtags.filter((tag: string) => currentHashtagNames.includes(tag));
+
+    // 3. Determine hashtags to disconnect (hashtags that should no longer be associated with the restaurant)
+    const hashtagsToDisconnect = currentHashtagNames.filter((tag) => !newHashtags.includes(tag));
+
+    // First, create the new hashtags that don't exist in the database
+    const createdHashtags = await Promise.all(
+      hashtagsToCreate.map(async (name: any) => {
+        const existingHashtag = await prisma.hashtag.findUnique({
+          where: { name },
+        });
+
+        // If the hashtag doesn't exist, create it
+        if (!existingHashtag) {
+          return await prisma.hashtag.create({
+            data: {
+              name,
+            },
+          });
+        }
+        return existingHashtag;
+      })
+    );
+
+    // Proceed with updating the restaurant
     const updated = await prisma.restaurant.update({
       where: { id: restaurantId },
       data: {
@@ -38,15 +77,13 @@ export async function PUT(
             finalEvaluation: data.evaluation.finalEvaluation,
           },
         },
+        // Manage hashtags: connect existing ones by name and newly created hashtags by id
         hashtags: {
-          connectOrCreate: data.hashtags.map((tag: { name: string }) => ({
-            where: {
-              name: tag.name.toLowerCase().trim(),
-            },
-            create: {
-              name: tag.name.toLowerCase().trim(),
-            },
-          })),
+          connect: [
+            ...hashtagsToConnect.map((name: any) => ({ name })), // Connect by name
+            ...createdHashtags.map((tag) => ({ id: tag.id })), // Connect by id for newly created hashtags
+          ],
+          disconnect: hashtagsToDisconnect.map((name) => ({ name })),
         },
       },
       include: { evaluation: true, hashtags: true },
