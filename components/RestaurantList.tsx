@@ -39,6 +39,19 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, han
           <div className="mt-2 text-sm">
             <span className="font-semibold">Final Rating:</span> {r.evaluation.finalEvaluation}
           </div>
+          {/* Display Hashtags */}
+      {r.hashtags && r.hashtags.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {r.hashtags?.map((tag) => (
+            <span
+              key={tag.name}
+              className="text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full"
+            >
+              #{tag.name}
+            </span>
+          ))}
+        </div>
+      )}
           <Button className="mt-2" onClick={(e) => { e.stopPropagation(); handleDelete(r.id); }}>
             Delete
           </Button>

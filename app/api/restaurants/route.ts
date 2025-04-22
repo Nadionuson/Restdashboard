@@ -39,8 +39,8 @@ export async function POST(req: Request) {
         lastVisitedDate: data.lastVisitedDate ? new Date(data.lastVisitedDate) : null,
         hashtags: {
           connectOrCreate: hashtags.map((tag: { name: string }) => ({
-            where: { name: tag.name.toUpperCase().trim() },
-            create: { name: tag.name.toUpperCase().trim() },  // Fixed here with the parentheses
+            where: { name: tag.name.toLowerCase().trim() },
+            create: { name: tag.name.toLowerCase().trim() },  // Fixed here with the parentheses
           })),
         },
         evaluation: {

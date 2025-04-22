@@ -41,10 +41,10 @@ export async function PUT(
         hashtags: {
           connectOrCreate: data.hashtags.map((tag: { name: string }) => ({
             where: {
-              name: tag.name.toUpperCase().trim(),
+              name: tag.name.toLowerCase().trim(),
             },
             create: {
-              name: tag.name.toUpperCase().trim(),
+              name: tag.name.toLowerCase().trim(),
             },
           })),
         },
