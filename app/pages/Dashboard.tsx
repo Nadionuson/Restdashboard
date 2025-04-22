@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState('');
   const [finalEvaluationFilter, setFinalEvaluationFilter] = useState('');
   const [nameSearchFilter, setNameSearchFilter] = useState('');
+  const [hashtagFilter, setHashtagFilter] = useState('');
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -40,8 +41,19 @@ export default function Dashboard() {
     const matchesName = nameSearchFilter
       ? r.name.toLowerCase().includes(nameSearchFilter.replace('*', '').toLowerCase())
       : true;
-    return matchesLocation && matchesStatus && matchesFinalEvaluation && matchesName;
+    const matchesHashtag = hashtagFilter
+      ? r.hashtags?.some((tag) => tag.name === hashtagFilter)
+      : true;
+  
+    return (
+      matchesLocation &&
+      matchesStatus &&
+      matchesFinalEvaluation &&
+      matchesName &&
+      matchesHashtag
+    );
   });
+  
 
   const handleSave = async (restaurant: Restaurant) => {
     const isEdit = restaurant.id > 0;
@@ -90,6 +102,8 @@ export default function Dashboard() {
         setFinalEvaluationFilter={setFinalEvaluationFilter}
         nameSearchFilter={nameSearchFilter}
         setNameSearchFilter={setNameSearchFilter}
+        hashtagFilter={hashtagFilter}
+        setHashtagFilter={setHashtagFilter}
       />
 
       <Button onClick={() => { setEditing(null); setShowModal(true); }}>

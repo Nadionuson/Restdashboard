@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Filters } from './ui/filter';
 
 interface DashboardFiltersProps {
@@ -13,6 +13,8 @@ interface DashboardFiltersProps {
   setFinalEvaluationFilter: (value: string) => void;
   nameSearchFilter: string;
   setNameSearchFilter: (value: string) => void;
+  hashtagFilter: string;
+  setHashtagFilter: (value: string) => void;
 }
 
 export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
@@ -25,7 +27,25 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
   setFinalEvaluationFilter,
   nameSearchFilter,
   setNameSearchFilter,
+  hashtagFilter,
+  setHashtagFilter,
 }) => {
+  const [hashtags, setHashtags] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchHashtags = async () => {
+      try {
+        const res = await fetch('/api/hashtags');
+        const data = await res.json();
+        setHashtags(data.map((tag: { name: string }) => tag.name));
+      } catch (err) {
+        console.error('Failed to fetch hashtags', err);
+      }
+    };
+
+    fetchHashtags();
+  }, []);
+
   return (
     <>
       <div className="mb-4">
@@ -50,6 +70,9 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
         setStatusFilter={setStatusFilter}
         finalEvaluationFilter={finalEvaluationFilter}
         setFinalEvaluationFilter={setFinalEvaluationFilter}
+        hashtags={hashtags}
+        hashtagFilter={hashtagFilter}
+        setHashtagFilter={setHashtagFilter}
       />
     </>
   );
