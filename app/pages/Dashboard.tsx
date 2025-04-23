@@ -106,7 +106,7 @@ export default function Dashboard() {
         setHashtagFilter={setHashtagFilter}
       />
 
-      <Button onClick={() => { setEditing(null); setShowModal(true); }}>
+      <Button variant="default" onClick={() => { setEditing(null); setShowModal(true); }}>
         Add New Restaurant
       </Button>
 

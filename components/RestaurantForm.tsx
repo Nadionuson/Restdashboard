@@ -39,7 +39,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
   const handleSelectHashtag = (hashtag: Hashtag) => {
     setSelectedHashtags((prev) => [...prev, hashtag]);
   };
-  
+
   const handleRemoveHashtag = (hashtag: Hashtag) => {
     setSelectedHashtags((prev) => prev.filter((h) => h.id !== hashtag.id));
   };
@@ -50,14 +50,14 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
 
         const res = await fetch('/api/hashtags');
         const data = await res.json();
-        
+
         setAvailableHashtags(data);
-        
+
       } catch (err) {
         console.error('Failed to load hashtags', err);
       }
     };
-  
+
     fetchHashtags();
   }, []);
 
@@ -102,106 +102,135 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto space-y-4 px-2">
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-10 bg-white pb-4 border-b border-gray-200 shadow-sm backdrop-blur-md">
-        <div className="text-xl font-semibold py-2">
-          {initialData ? 'Edit Restaurant' : 'Add New Restaurant'}
-        </div>
-      </div>
-  
-      {/* Name */}
-      <div>
-        <label className="block text-sm font-medium">Name</label>
-        <Input value={name} onChange={(e) => setName(e.target.value)} />
-      </div>
-  
-      {/* Location */}
-      <div>
-        <label className="block text-sm font-medium">Location</label>
-        <Input value={location} onChange={(e) => setLocation(e.target.value)} />
-      </div>
-  
-      {/* Status */}
-      <div>
-        <label className="block text-sm font-medium">Status</label>
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value as RestaurantStatus)}
-          className="w-full border p-2 rounded"
+    <div className="h-[calc(100vh-4rem)] overflow-hidden"> {/* Outer container with full height minus any navbar if you have one */}
+      <form onSubmit={handleSubmit} className="h-full flex flex-col text-xs">
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-10 bg-background border-b border-border px-4 py-1 space-y-2">
+          {/* Line 1: Name + Location */}
+          <div className="flex flex-col md:flex-row gap-2">
+            <div className="flex-1">
+              <label className="block text-xs font-medium">Name</label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} className="w-full border p-2 rounded text-xs" />
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs font-medium">Location</label>
+              <Input value={location} onChange={(e) => setLocation(e.target.value)} className="w-full border p-2 rounded text-xs" />
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs font-medium">Status</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as RestaurantStatus)}
+                className="w-full border p-2 rounded text-xs"
+              >
+                <option value="Want to go">Want to go</option>
+                <option value="Tried it">Tried it</option>
+              </select>
+            </div>
+            {status === 'Tried it' && (
+              <div className="flex-1">
+                <label className="block text-xs font-medium">Last Visited Date</label>
+                <Input
+                  className="w-full border p-2 rounded text-xs"
+                  type="date"
+                  value={lastVisitedDate}
+                  onChange={(e) => setLastVisitedDate(e.target.value)}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Line 2: Status + Date */}
+          <div className="flex flex-col md:flex-row gap-2">
+            
+          </div>
+
+          {/* Line 3: Save Button */}
+          {/* Line 3: Save Button */}
+<div className="space-y-1">
+  <Button type="submit" className="w-full">
+    {initialData ? 'Update Restaurant' : 'Add Restaurant'}
+  </Button>
+
+  {/* Hashtag preview with remove functionality */}
+  {selectedHashtags.length > 0 && (
+    <div className="flex flex-wrap gap-1 pt-1">
+      {selectedHashtags.map((tag) => (
+        <span
+          key={tag.id}
+          className="bg-muted text-muted-foreground px-2 py-0.5 rounded-full text-[10px] flex items-center gap-1"
         >
-          <option value="Want to go">Want to go</option>
-          <option value="Tried it">Tried it</option>
-        </select>
-      </div>
-  
-      {/* Last Visited Date */}
-      {status === 'Tried it' && (
-        <div>
-          <label className="block text-sm font-medium">Last Visited Date</label>
-          <Input
-            type="date"
-            value={lastVisitedDate}
-            onChange={(e) => setLastVisitedDate(e.target.value)}
-          />
+          #{tag.name}
+          <button
+            onClick={() => handleRemoveHashtag(tag)} // Remove hashtag on click
+            className="text-xs text-red-500 hover:text-red-700"
+          >
+            &times;
+          </button>
+        </span>
+      ))}
+    </div>
+  )}
+</div>
+
         </div>
-      )}
-  
-      {/* Highlights */}
-      <div>
-        <label className="block text-sm font-medium">Highlights</label>
-        <Input value={highlights} onChange={(e) => setHighlights(e.target.value)} />
-      </div>
-  
-      {/* Ratings */}
-      <div>
-        <label className="block text-sm font-medium">Ratings</label>
-        <div className="space-y-2">
-          <StarRating
-            label="Location"
-            value={evaluation.locationRating}
-            onChange={(value) => setEvaluation(prev => ({ ...prev, locationRating: value }))}
-          />
-          <StarRating
-            label="Service"
-            value={evaluation.serviceRating}
-            onChange={(value) => setEvaluation(prev => ({ ...prev, serviceRating: value }))}
-          />
-          <StarRating
-            label="Price/Quality"
-            value={evaluation.priceQualityRating}
-            onChange={(value) => setEvaluation(prev => ({ ...prev, priceQualityRating: value }))}
-          />
-          <StarRating
-            label="Food"
-            value={evaluation.foodQualityRating}
-            onChange={(value) => setEvaluation(prev => ({ ...prev, foodQualityRating: value }))}
-          />
-          <StarRating
-            label="Atmosphere"
-            value={evaluation.atmosphereRating}
-            onChange={(value) => setEvaluation(prev => ({ ...prev, atmosphereRating: value }))}
-          />
+
+        {/* Scrollable body content */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+         
+
+          {/* Ratings */}
+          <div>
+            <label className="block text-xs font-medium mb-1">Ratings</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <StarRating
+                label="Location"
+                value={evaluation.locationRating}
+                onChange={(value) => setEvaluation(prev => ({ ...prev, locationRating: value }))}
+              />
+              <StarRating
+                label="Service"
+                value={evaluation.serviceRating}
+                onChange={(value) => setEvaluation(prev => ({ ...prev, serviceRating: value }))}
+              />
+              <StarRating
+                label="Price/Quality"
+                value={evaluation.priceQualityRating}
+                onChange={(value) => setEvaluation(prev => ({ ...prev, priceQualityRating: value }))}
+              />
+              <StarRating
+                label="Food"
+                value={evaluation.foodQualityRating}
+                onChange={(value) => setEvaluation(prev => ({ ...prev, foodQualityRating: value }))}
+              />
+              <StarRating
+                label="Atmosphere"
+                value={evaluation.atmosphereRating}
+                onChange={(value) => setEvaluation(prev => ({ ...prev, atmosphereRating: value }))}
+              />
+            </div>
+          </div>
+
+
+          {/* Hashtags */}
+          <div>
+            <HashtagSelector
+              availableHashtags={availableHashtags}
+              selectedHashtags={selectedHashtags}
+              onSelectHashtag={handleSelectHashtag}
+              onRemoveHashtag={handleRemoveHashtag}
+            />
+          </div>
+
+           {/* Highlights */}
+           <div>
+            <label className="block text-xs font-medium">Highlights</label>
+            <Input value={highlights} onChange={(e) => setHighlights(e.target.value)} className="w-full border p-2 rounded text-xs" />
+          </div>
         </div>
-      </div>
-  
-      {/* Hashtags */}
-      <div>
-        <HashtagSelector
-          availableHashtags={availableHashtags}
-          selectedHashtags={selectedHashtags}
-          onSelectHashtag={handleSelectHashtag}
-          onRemoveHashtag={handleRemoveHashtag}
-        />
-      </div>
-  
-      {/* Submit Button */}
-      <div className="pt-4">
-        <Button type="submit" className="w-full">
-          {initialData ? 'Update Restaurant' : 'Add Restaurant'}
-        </Button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
-  
+
+
 };

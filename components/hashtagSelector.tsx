@@ -92,21 +92,7 @@ const HashtagSelector: React.FC<HashtagSelectorProps> = ({
       </div>
 
       {/* Display Selected Hashtags */}
-      <div className="mt-4">
-        <h4 className="font-medium">Selected Hashtags</h4>
-        <div className="flex flex-wrap gap-2">
-          {selectedHashtags.map((hashtag) => (
-            <button
-              key={hashtag.id}  
-              type="button"
-              onClick={() => onRemoveHashtag(hashtag)}
-              className="bg-red-500 text-white px-2 py-1 rounded"
-            >
-              #{hashtag.name} &times;
-            </button>
-          ))}
-        </div>
-      </div>
+      
     </div>
   );
 };
