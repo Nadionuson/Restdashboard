@@ -36,7 +36,7 @@ export default function Dashboard() {
     const matchesLocation = locationFilter ? r.location === locationFilter : true;
     const matchesStatus = statusFilter ? r.status === statusFilter : true;
     const matchesFinalEvaluation = finalEvaluationFilter
-      ? r.evaluation.finalEvaluation === Number(finalEvaluationFilter)
+      ? r.evaluation.finalEvaluation >=  Number(finalEvaluationFilter)
       : true;
     const matchesName = nameSearchFilter
       ? r.name.toLowerCase().includes(nameSearchFilter.replace('*', '').toLowerCase())

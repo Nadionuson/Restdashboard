@@ -99,6 +99,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       hashtags: selectedHashtags,
     };
     onSubmit(newRestaurant);
+    window.location.reload();
   };
 
   return (
