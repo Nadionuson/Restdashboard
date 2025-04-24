@@ -28,7 +28,8 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({
   setShowModal,
   setEditing,
 }) => {
-  const [sortByRating, setSortByRating] = useState(false);
+  const [sortMode, setSortMode] = useState<'random' | 'rating' | 'name'>('random');
+
   const [shuffledRestaurants, setShuffledRestaurants] = useState<Restaurant[]>([]);
 
   useEffect(() => {
@@ -36,20 +37,38 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({
     setShuffledRestaurants([...restaurants].sort(() => Math.random() - 0.5));
   }, [restaurants]);
 
-  const sortedRestaurants = sortByRating
-    ? [...restaurants].sort((a, b) => (b.evaluation.finalEvaluation ?? 0) - (a.evaluation.finalEvaluation ?? 0))
-    : shuffledRestaurants;
+  const sortedRestaurants = React.useMemo(() => {
+    if (sortMode === 'rating') {
+      return [...restaurants].sort(
+        (a, b) => (b.evaluation.finalEvaluation ?? 0) - (a.evaluation.finalEvaluation ?? 0)
+      );
+    }
+  
+    if (sortMode === 'name') {
+      return [...restaurants].sort((a, b) =>
+        a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+      );
+    }
+  
+    return shuffledRestaurants; // random
+  }, [sortMode, restaurants, shuffledRestaurants]);
+  
 
   return (
     <>
     <p></p>
-      <Button
-        variant="outline"
-        className="mb-4"
-        onClick={() => setSortByRating((prev) => !prev)}
-      >
-        {sortByRating ? 'Show Random Order' : 'Sort by Rating'}
-      </Button>
+    <div className="mb-4">
+  <label className="mr-2 font-semibold">Sort by:</label>
+  <select
+    value={sortMode}
+    onChange={(e) => setSortMode(e.target.value as 'random' | 'rating' | 'name')}
+    className="border border-gray-300 rounded px-2 py-1 text-sm bg-white"
+  >
+    <option value="random">Random</option>
+    <option value="rating">Rating</option>
+    <option value="name">Name</option>
+  </select>
+</div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {sortedRestaurants.map((r) => (
