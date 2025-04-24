@@ -1,5 +1,5 @@
 import { Dialog } from "@headlessui/react";
-import { RestaurantForm } from "./EvaluationStars";
+import { RestaurantForm } from "./RestaurantForm";
 import { Button } from './ui/button';
 
 type RestaurantDrawerProps = {
@@ -30,7 +30,7 @@ export const RestaurantDrawer = ({ isOpen, onClose, restaurant, onSave }: Restau
         </div>
 
         {/* Restaurant Form */}
-        <RestaurantForm restaurant={restaurant} onSave={onSave} />
+        <RestaurantForm initialData={restaurant} onSubmit={onSave} />
         
         {/* Close Button */}
         <div className="mt-4">
