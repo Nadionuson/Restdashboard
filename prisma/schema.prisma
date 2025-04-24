@@ -14,10 +14,13 @@ model Restaurant {
   status          String
   highlights      String?
   lastVisitedDate DateTime?
+  isPrivate       Boolean?
   evaluation      Evaluation?
   hashtags        Hashtag[]   @relation("RestaurantHashtags")
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+  ownerId         Int?
+  owner           User?       @relation(fields: [ownerId], references: [id])
 }
 
 model Evaluation {
@@ -53,4 +56,16 @@ model RestaurantHistory {
   deletedAt       DateTime @default(now())
 
   @@id([id, deletedAt])
+}
+
+model User {
+  id               Int      @id @default(autoincrement())
+  email            String   @unique
+  passwordHash     String?  // for traditional login
+  loginCode        String?  // one-time code for passwordless login
+  loginCodeExpires DateTime? // when the code expires
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  restaurants      Restaurant[] // assuming each user owns multiple restaurants
 }
