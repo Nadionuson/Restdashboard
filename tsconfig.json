@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "ESNext",
+    "types": ["next-auth"],
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
@@ -30,8 +31,9 @@
     ".next/types/**/*.ts",
     "src/**/*",
     "app",
-    "pages"
-  ],
+    "pages",
+    "types"
+, "prisma/scripts/updateRestaurantsWithIdAndIsPrivate.js"  ],
   "exclude": [
     "node_modules",
     "**/node_modules",

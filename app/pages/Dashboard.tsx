@@ -1,11 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+
 import { Button } from '@/components/ui/button';
+import LogoutButton from '@/components/ui/logoutButton';
 import { RestaurantList } from '@/components/RestaurantList';
 import { useRestaurants } from '@/app/hooks/useRestaurant';
 import { Restaurant } from '@/app/types/restaurant';
-import { DashboardFilters } from  '@/components/DashboardFilters';
+import { DashboardFilters } from '@/components/DashboardFilters';
 import { RestaurantModal } from '@/components/DashboardModal';
 
 export default function Dashboard() {
@@ -19,6 +23,20 @@ export default function Dashboard() {
   const [nameSearchFilter, setNameSearchFilter] = useState('');
   const [hashtagFilter, setHashtagFilter] = useState('');
 
+  const router = useRouter();
+  const { data: session, status } = useSession();
+
+  const currentUserId = session?.user?.id ? Number(session.user.id) : undefined;
+
+  // Redirect unauthenticated users
+  useEffect(() => {
+    console.log(status);
+    if (status === 'unauthenticated') {
+      router.replace('/signin');
+    }
+  }, [status, router]);
+
+  // Fetch location data only once on mount
   useEffect(() => {
     const fetchLocations = async () => {
       try {
@@ -30,13 +48,14 @@ export default function Dashboard() {
       }
     };
     fetchLocations();
-  }, []);
+  }, []); // Empty dependency array ensures this runs only once
 
+  // Filter restaurants based on filters
   const filteredRestaurants = restaurants.filter((r) => {
     const matchesLocation = locationFilter ? r.location === locationFilter : true;
     const matchesStatus = statusFilter ? r.status === statusFilter : true;
     const matchesFinalEvaluation = finalEvaluationFilter
-      ? r.evaluation.finalEvaluation >=  Number(finalEvaluationFilter)
+      ? r.evaluation.finalEvaluation >= Number(finalEvaluationFilter)
       : true;
     const matchesName = nameSearchFilter
       ? r.name.toLowerCase().includes(nameSearchFilter.replace('*', '').toLowerCase())
@@ -44,7 +63,7 @@ export default function Dashboard() {
     const matchesHashtag = hashtagFilter
       ? r.hashtags?.some((tag) => tag.name === hashtagFilter)
       : true;
-  
+
     return (
       matchesLocation &&
       matchesStatus &&
@@ -53,8 +72,8 @@ export default function Dashboard() {
       matchesHashtag
     );
   });
-  
 
+  // Handle saving or editing a restaurant
   const handleSave = async (restaurant: Restaurant) => {
     const isEdit = restaurant.id > 0;
     const endpoint = isEdit ? `/api/restaurants/${restaurant.id}` : '/api/restaurants';
@@ -67,7 +86,7 @@ export default function Dashboard() {
         body: JSON.stringify(restaurant),
       });
 
-      if (!res.ok) throw new Error("Failed to save restaurant");
+      if (!res.ok) throw new Error('Failed to save restaurant');
 
       await refetch();
       setShowModal(false);
@@ -77,10 +96,11 @@ export default function Dashboard() {
     }
   };
 
+  // Handle restaurant deletion
   const handleDelete = async (id: number) => {
     try {
       const res = await fetch(`/api/restaurants/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error("Failed to delete restaurant");
+      if (!res.ok) throw new Error('Failed to delete restaurant');
 
       await refetch();
     } catch (error) {
@@ -88,9 +108,25 @@ export default function Dashboard() {
     }
   };
 
+  // ✅ Here we conditionally render content, but NOT conditionally call hooks
+  if (status === 'loading') {
+    return <div>Loading...</div>;
+  }
+
   return (
+    
+      // Ensure session is available before proceeding
+  //if (status === 'loading') return <p>Loading...</p>;
+
+    
     <div className="p-4 max-w-5xl mx-auto space-y-6">
+
+      <div>
+        <h1>Welcome, {session?.user?.email} 👋 {session?.user && <LogoutButton />}</h1>
+        
+      </div>
       <h1 className="text-3xl font-bold">🍽️ Restaurant Dashboard</h1>
+      
 
       <DashboardFilters
         locations={locations}
@@ -112,10 +148,10 @@ export default function Dashboard() {
 
       <RestaurantList
         restaurants={filteredRestaurants}
+        currentUserId={currentUserId}
         handleDelete={handleDelete}
         setShowModal={setShowModal}
-        setEditing={setEditing}
-      />
+        setEditing={setEditing}       />
 
       <RestaurantModal
         showModal={showModal}

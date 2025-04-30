@@ -1,69 +1,110 @@
-import { PrismaClient } from '@prisma/client'
-import { Trykker } from 'next/font/google'
-import { NextResponse } from 'next/server'
+  import { PrismaClient } from '@prisma/client'
+  import { NextResponse } from 'next/server'
+  import { getServerSession } from 'next-auth';
+  import { authOptions } from '../auth/[...nextauth]/authOptions';
+import Email from 'next-auth/providers/email';
 
-const prisma = new PrismaClient()
+  const prisma = new PrismaClient()
 
-// GET all restaurants
-export async function GET() {
-  const restaurants = await prisma.restaurant.findMany({
-    include: { evaluation: true, hashtags: true }
-  })
+  // GET all restaurants
+  export async function GET() {
+    
+    const session = await getServerSession(authOptions);
 
-  return NextResponse.json(restaurants)
-}
+    const userId = session?.user?.id; 
+    
+    const restaurants = await prisma.restaurant.findMany({
+      where:{
+        OR: [
+          { ownerId: Number(userId) },          // Your own
+          { isPrivate: false }                   // Public others
+        ]
+      },
+      include: { 
+        evaluation: true, 
+        hashtags: true, 
+        owner: {
+          select: {
+            email: true,
+            id: true
+          }
+        }
+      }
+    })
 
-// POST create new restaurant
-export async function POST(req: Request) {
-  const data = await req.json();
+    return NextResponse.json(restaurants)
+  }
 
-  try {
-    const {
-      name,
-      location,
-      status,
-      highlights,
-      lastVisitedDate,
-      evaluation,
-      hashtags,
-    } = data;
+  // POST create new restaurant
+  export async function POST(req: Request) {
+    
+    const session = await getServerSession(authOptions);
 
-    console.log("Creating new restaurant:", data);
+    if (!session || !session.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const data = await req.json();
 
-    const restaurant = await prisma.restaurant.create({
-      data: {
-        name: data.name,
-        location: data.location,
-        status: data.status,
-        highlights: data.highlights,
-        lastVisitedDate: data.lastVisitedDate ? new Date(data.lastVisitedDate) : null,
-        hashtags: {
-          connectOrCreate: hashtags.map((tag: { name: string }) => ({
-            where: { name: tag.name.toLowerCase().trim() },
-            create: { name: tag.name.toLowerCase().trim() },  // Fixed here with the parentheses
-          })),
-        },
-        evaluation: {
-          create: {
-            locationRating: data.evaluation.locationRating,
-            serviceRating: data.evaluation.serviceRating,
-            priceQualityRating: data.evaluation.priceQualityRating,
-            foodQualityRating: data.evaluation.foodQualityRating,
-            atmosphereRating: data.evaluation.atmosphereRating,
-            finalEvaluation: data.evaluation.finalEvaluation,
+    try {
+
+      const user = await prisma.user.findUnique({
+        where: { email: session.user.email },
+      });
+
+      if (!user) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
+
+
+      const {
+        name,
+        location,
+        status,
+        highlights,
+        lastVisitedDate,
+        evaluation,
+        hashtags,
+      } = data;
+
+      console.log("Creating new restaurant:", data);
+
+      const restaurant = await prisma.restaurant.create({
+        data: {
+          name: data.name,
+          location: data.location,
+          status: data.status,
+          highlights: data.highlights,
+          ownerId: user.id,
+          isPrivate: data.private ?? false,
+          lastVisitedDate: data.lastVisitedDate ? new Date(data.lastVisitedDate) : null,
+          hashtags: {
+            connectOrCreate: hashtags.map((tag: { name: string }) => ({
+              where: { name: tag.name.toLowerCase().trim() },
+              create: { name: tag.name.toLowerCase().trim() },  // Fixed here with the parentheses
+            })),
+          },
+          evaluation: {
+            create: {
+              locationRating: data.evaluation.locationRating,
+              serviceRating: data.evaluation.serviceRating,
+              priceQualityRating: data.evaluation.priceQualityRating,
+              foodQualityRating: data.evaluation.foodQualityRating,
+              atmosphereRating: data.evaluation.atmosphereRating,
+              finalEvaluation: data.evaluation.finalEvaluation,
+            },
           },
         },
-      },
-      include: { hashtags: true, evaluation: true }
-    });
+        include: { hashtags: true, evaluation: true }
+      });
 
-    return NextResponse.json({
-      message: 'Restaurant created!',
-      created: restaurant,
-    });
-  } catch (error) {
-    console.error('[POST /api/restaurants]', error);
-    return NextResponse.json({ error: 'Failed to create restaurant' }, { status: 500 });
+      return NextResponse.json({
+        message: 'Restaurant created!',
+        created: restaurant,
+      });
+    } catch (error) {
+      console.error('[POST /api/restaurants]', error);
+      return NextResponse.json({ error: 'Failed to create restaurant' }, { status: 500 });
+    }
   }
-}
 

@@ -4,13 +4,19 @@ export type Evaluation = {
   priceQualityRating: number;
   foodQualityRating: number;
   atmosphereRating: number;
-  finalEvaluation: number
+  finalEvaluation: number;
 };
 
 export type RestaurantStatus = 'Want to go' | 'Tried it';
+
 export type Hashtag = {
   id: number;
   name: string;
+};
+
+export type User = {
+  email: string;
+  id: number;
 };
 
 export type Restaurant = {
@@ -20,8 +26,10 @@ export type Restaurant = {
   status: RestaurantStatus;
   evaluation: Evaluation;
   highlights: string;
-  lastVisitedDate: Date | null; 
+  lastVisitedDate: Date | null;
   hashtags?: Hashtag[];
+  isPrivate: boolean;
+  owner: User;  // Include user info
 };
 
 // Helper function to calculate the final evaluation
@@ -31,5 +39,3 @@ export const getFinalEvaluation = (evaluation: Evaluation): number => {
     (locationRating + serviceRating + priceQualityRating + foodQualityRating + atmosphereRating) / 5
   );
 };
-
-
