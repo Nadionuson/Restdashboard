@@ -29,7 +29,7 @@ export type Restaurant = {
   lastVisitedDate: Date | null;
   hashtags?: Hashtag[];
   isPrivate: boolean;
-  owner: User;  // Include user info
+  owner?: User;  // Include user info
 };
 
 // Helper function to calculate the final evaluation

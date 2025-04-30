@@ -3,6 +3,7 @@
   import { getServerSession } from 'next-auth';
   import { authOptions } from '../auth/[...nextauth]/authOptions';
 import Email from 'next-auth/providers/email';
+import { connect } from 'http2';
 
   const prisma = new PrismaClient()
 

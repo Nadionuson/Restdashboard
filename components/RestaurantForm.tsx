@@ -22,6 +22,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
     }
     return '';
   });
+  const [isPrivate, setIsPrivate] = useState(initialData?.isPrivate ?? false);
   const [evaluation, setEvaluation] = useState<Evaluation>({
     locationRating: 0,
     serviceRating: 0,
@@ -69,6 +70,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       setHighlights(initialData.highlights || '');
       setEvaluation(initialData.evaluation);
       setSelectedHashtags(initialData.hashtags || []);
+      setIsPrivate(initialData.isPrivate ?? false);
     }
   }, [initialData]);
 
@@ -86,6 +88,8 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
     evaluation.atmosphereRating,
   ]);
 
+  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newRestaurant: Restaurant = {
@@ -97,6 +101,8 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       lastVisitedDate: status === 'Tried it' && lastVisitedDate ? new Date(lastVisitedDate) : null,
       evaluation,
       hashtags: selectedHashtags,
+      isPrivate: isPrivate,
+
     };
     onSubmit(newRestaurant);
     window.location.reload();
@@ -181,6 +187,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
          
 
           {/* Ratings */}
+          {status === 'Tried it' && (
           <div>
             <label className="block text-xs font-medium mb-1">Ratings</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -211,7 +218,17 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
               />
             </div>
           </div>
+          )}
 
+        <div className="flex items-center space-x-2">
+          <input
+    type="checkbox"
+    id="isPrivate"
+    checked={isPrivate}
+    onChange={(e) => setIsPrivate(e.target.checked)}
+  />
+          <label htmlFor="isPrivate" className="text-sm">Private</label>
+        </div>
 
           {/* Hashtags */}
           <div>
