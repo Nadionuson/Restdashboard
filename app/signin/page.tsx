@@ -5,7 +5,7 @@ import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 export default function SignInPage() {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();
 
@@ -13,31 +13,36 @@ export default function SignInPage() {
     e.preventDefault();
 
     const result = await signIn('credentials', {
-      email,
+      identifier, // new field
       password,
       redirect: false,
     });
-    console.log(result);
+
+    console.log(result)
+
     if (result?.ok) {
       console.log('Login succeeded!');
-      router.push('/'); // or wherever you want after login
+      router.push('/');
     } else {
       console.log('Login failed:', result);
-      alert('Invalid credentials');
+      alert('Invalid username/email or password');
     }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-darkBackground px-4">
-      <form onSubmit={handleLogin} className="bg-lightBackground p-8 rounded-md shadow-md w-full max-w-md space-y-6">
+      <form
+        onSubmit={handleLogin}
+        className="bg-lightBackground p-8 rounded-md shadow-md w-full max-w-md space-y-6"
+      >
         <h1 className="text-2xl font-bold text-center text-lightText">Sign In</h1>
 
         <div className="space-y-4">
           <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="text"
+            placeholder="Email or Username"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
             required
             className="w-full p-3 rounded-md bg-darkBackground text-lightText"
           />
@@ -56,7 +61,7 @@ export default function SignInPage() {
         </button>
 
         <p className="text-center text-sm text-mutedText">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <a href="/signup" className="text-primary hover:underline">
             Sign up
           </a>

@@ -61,6 +61,7 @@ model RestaurantHistory {
 model User {
   id               Int      @id @default(autoincrement())
   email            String   @unique
+  username         String   @unique
   passwordHash     String?  // for traditional login
   loginCode        String?  // one-time code for passwordless login
   loginCodeExpires DateTime? // when the code expires

@@ -70,10 +70,8 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {sortedRestaurants.map((r) => {
-          console.log("Owner Id: "+r.owner.id);
-          console.log("Owner email: "+r.owner.email);
-          console.log("Current user: "+Number(currentUserId));
-          const isOwner = r.owner.id === Number(currentUserId);
+         
+          const isOwner = r.owner?.id === Number(currentUserId);
           const isPublic = !r.isPrivate;
 
           // Only clickable if it's the owner's restaurant
@@ -130,7 +128,7 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({
               )}
 
               <div className="mt-2 text-xs text-gray-500">
-                Owner: {r.owner.email ?? 'Unknown'} | Private: {r.isPrivate ? 'Yes' : 'No'}
+                Owner: {r.owner?.email ?? 'Unknown'} | Private: {r.isPrivate ? 'Yes' : 'No'}
               </div>
 
               {/* Delete button only for owner */}

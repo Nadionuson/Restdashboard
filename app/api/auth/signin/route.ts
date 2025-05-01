@@ -8,16 +8,30 @@ const prisma = new PrismaClient()
 
 export async function POST(req: Request) {
   try {
-    const { email, password } = await req.json();
+    const { identifier, password } = await req.json();
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    if (!identifier || !password) {
+      return NextResponse.json({ error: 'Missing credentials' }, { status: 400 });
+    }
+
+    // Find user by either email or username
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: identifier },
+          { username: identifier },
+        ],
+      },
+    });
+
     if (!user) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const isValidPassword = await bcrypt.compare(password, user.passwordHash || '');
+
     if (!isValidPassword) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
     }
 
     // Create JWT token
@@ -32,7 +46,7 @@ export async function POST(req: Request) {
       path: '/',
     };
 
-    const res = NextResponse.json({ message: 'Login successful' });
+    const res = NextResponse.json({ message: 'Login successful', user: { id: user.id, email: user.email, username: user.username } });
     res.headers.set('Set-Cookie', cookie.serialize('authToken', token, cookieOptions));
 
     return res;
