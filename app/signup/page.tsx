@@ -31,7 +31,7 @@ export default function SignUpPage() {
           setSuggestions(errorData.suggestions);
         }
         alert(errorData.message || 'Signup failed');
-        console.error(error);
+        console.error('Signup failed:', res);
       }
     } catch (error) {
       console.error('Signup error:', error);
