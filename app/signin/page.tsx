@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function SignInPage() {
   const [identifier, setIdentifier] = useState('');
@@ -13,18 +14,14 @@ export default function SignInPage() {
     e.preventDefault();
 
     const result = await signIn('credentials', {
-      identifier, // new field
+      identifier,
       password,
       redirect: false,
     });
 
-    console.log(result)
-
     if (result?.ok) {
-      console.log('Login succeeded!');
       router.push('/');
     } else {
-      console.log('Login failed:', result);
       alert('Invalid username/email or password');
     }
   };
@@ -35,6 +32,18 @@ export default function SignInPage() {
         onSubmit={handleLogin}
         className="bg-lightBackground p-8 rounded-md shadow-md w-full max-w-md space-y-6"
       >
+        {/* Logo */}
+        <div className="flex justify-center">
+          <Image
+            src="/logo.png"
+            alt="Dineboard Logo"
+            width={80}
+            height={80}
+            className="mb-4"
+            priority
+          />
+        </div>
+
         <h1 className="text-2xl font-bold text-center text-lightText">Sign In</h1>
 
         <div className="space-y-4">
