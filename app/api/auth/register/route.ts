@@ -1,23 +1,17 @@
 import { NextResponse } from 'next/server';
-
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
-// Helper to generate anagram-like suggestions
-function generateUsernameSuggestions(base: string, maxSuggestions = 5): string[] {
+// Generate username suggestions by shuffling characters
+function generateUsernameSuggestions(base: string, max = 5): string[] {
   const chars = base.split('');
   const results = new Set<string>();
 
-  while (results.size < maxSuggestions * 3 && results.size < 1000) {
-    const shuffled = chars
-      .slice()
-      .sort(() => 0.5 - Math.random())
-      .join('');
-    if (shuffled !== base) {
-      results.add(shuffled);
-    }
+  while (results.size < max * 3 && results.size < 1000) {
+    const shuffled = chars.slice().sort(() => 0.5 - Math.random()).join('');
+    if (shuffled !== base) results.add(shuffled);
   }
 
   return Array.from(results);
@@ -28,58 +22,55 @@ export async function POST(req: Request) {
     const { email, username, password } = await req.json();
 
     if (!email || !username || !password) {
+      console.warn('Missing fields in registration:', { email, username });
       return NextResponse.json({ message: 'All fields are required' }, { status: 400 });
     }
 
-// ✅ Check email first — it's required to be unique
-const existingEmailUser = await prisma.user.findUnique({
-  where: { email },
-});
+    // Check if email is already in use
+    const existingEmailUser = await prisma.user.findUnique({ where: { email } });
+    if (existingEmailUser) {
+      console.warn('Duplicate email:', email);
+      return NextResponse.json({ message: 'Email already in use' }, { status: 409 });
+    }
 
-if (existingEmailUser) {
-  return NextResponse.json({ message: 'Email already in use' }, { status: 409 });
-}
+    // Check if username is already taken
+    const existingUsernameUser = await prisma.user.findUnique({ where: { username } });
+    if (existingUsernameUser) {
+      console.warn('Username taken:', username);
 
-// ✅ Check username separately
-const existingUsernameUser = await prisma.user.findUnique({
-  where: { username },
-});
+      const suggestionsPool = generateUsernameSuggestions(username);
+      const existingUsernames = await prisma.user.findMany({
+        where: { username: { in: suggestionsPool } },
+        select: { username: true },
+      });
 
-if (existingUsernameUser) {
-  const suggestions = generateUsernameSuggestions(username);
-  const existingUsernames = await prisma.user.findMany({
-    where: { username: { in: suggestions } },
-    select: { username: true },
-  });
+      const takenSet = new Set(existingUsernames.map(u => u.username));
+      const suggestions = suggestionsPool.filter(s => !takenSet.has(s)).slice(0, 3);
 
-  const takenUsernames = new Set(existingUsernames.map(u => u.username));
-  const available = suggestions.filter(s => !takenUsernames.has(s)).slice(0, 3);
+      return NextResponse.json(
+        {
+          message: 'Username already taken',
+          suggestions,
+        },
+        { status: 409 }
+      );
+    }
 
-  return NextResponse.json(
-    {
-      message: 'Username already taken',
-      suggestions: available,
-    },
-    { status: 409 }
-  );
-}
-
-    
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user
+    // Hash password and create user
+    const passwordHash = await bcrypt.hash(password, 10);
     const newUser = await prisma.user.create({
       data: {
         email,
         username,
-        passwordHash: hashedPassword,
+        passwordHash,
       },
     });
 
-    return NextResponse.json(newUser);
+    console.log('✅ User created:', newUser.email);
+    return NextResponse.json({ message: 'User created successfully' }, { status: 201 });
+
   } catch (error) {
-    return NextResponse.json({ error: 'An error occurred during registration' }, { status: 500 });
+    console.error('🔥 Registration error:', error);
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }
