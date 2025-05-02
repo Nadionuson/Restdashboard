@@ -13,7 +13,6 @@ model Restaurant {
   location        String
   status          String
   highlights      String?
-  lastVisitedDate DateTime?
   isPrivate       Boolean?
   evaluation      Evaluation?
   hashtags        Hashtag[]   @relation("RestaurantHashtags")
@@ -48,7 +47,6 @@ model RestaurantHistory {
   location        String
   status          String
   highlights      String?
-  lastVisitedDate DateTime?
   evaluation      Json
   hashtags        Json
   createdAt       DateTime

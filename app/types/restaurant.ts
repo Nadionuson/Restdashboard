@@ -17,6 +17,7 @@ export type Hashtag = {
 export type User = {
   email: string;
   id: number;
+  username: string;
 };
 
 export type Restaurant = {
@@ -26,10 +27,11 @@ export type Restaurant = {
   status: RestaurantStatus;
   evaluation: Evaluation;
   highlights: string;
-  lastVisitedDate: Date | null;
   hashtags?: Hashtag[];
   isPrivate: boolean;
   owner?: User;  // Include user info
+  createdAt: string | Date;
+  updatedAt: string | Date;
 };
 
 // Helper function to calculate the final evaluation

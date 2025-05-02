@@ -15,15 +15,6 @@ interface RestaurantListProps {
 }
 
 
-
-const isOverOneYearOld = (lastVisitedDate: string | Date | null): boolean => {
-  if (!lastVisitedDate) return false;
-  const visitDate = new Date(lastVisitedDate);
-  const oneYearAgo = new Date();
-  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-  return visitDate < oneYearAgo;
-};
-
 export const RestaurantList: React.FC<RestaurantListProps> = ({
   restaurants,
   currentUserId,
@@ -94,20 +85,14 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({
               <p className="text-sm">{r.location}</p>
               <p className="text-sm italic">{r.status}</p>
 
-              {r.lastVisitedDate && (() => {
-                const visitDate = new Date(r.lastVisitedDate);
-                const isOld = isOverOneYearOld(r.lastVisitedDate);
-                return (
-                  <p className={`text-sm ${isOld ? 'text-red-500' : 'text-gray-600'}`}>
-                    Last visited on{' '}
-                    {visitDate.toLocaleDateString('en-GB', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                    })}
-                  </p>
-                );
-              })()}
+              <p className="text-sm text-gray-600">
+  Added on{' '}
+  {new Date(r.updatedAt).toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })}
+</p>
 
               <div className="mt-2 text-sm">
                 <span className="font-semibold">Final Rating:</span>{' '}
@@ -128,7 +113,12 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({
               )}
 
               <div className="mt-2 text-xs text-gray-500">
-                Owner: {r.owner?.email ?? 'Unknown'} | Private: {r.isPrivate ? 'Yes' : 'No'}
+              Owner: {r.owner?.username ?? 'Unknown'}
+  {isOwner && (
+    <>
+      {' '}| Private: {r.isPrivate ? 'Yes' : 'No'}
+    </>
+  )}
               </div>
 
               {/* Delete button only for owner */}

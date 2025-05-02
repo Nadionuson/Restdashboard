@@ -55,6 +55,7 @@ export const authOptions: NextAuthOptions = {
             id: user.id.toString(),
             email: user.email,
             username: user.username,
+            name: user.username,
             passwordHash: user.passwordHash,
             loginCode: user.loginCode,
             loginCodeExpires: user.loginCodeExpires,
@@ -75,15 +76,18 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id as string
         token.email = user.email; 
+        token.username = user.username || user.name;
       }
       return token
     },
-    async session({ session, token }) {
+    async session({ session, token, user }) {
       if (token) {
+        console.log("Session:", session)
         session.user = {
           ...(session.user || {}),
           id: token.id as string,
           email: token.email as string,
+          username: token.username as string, 
         };
       }
       return session

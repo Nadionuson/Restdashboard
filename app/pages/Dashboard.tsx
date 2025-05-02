@@ -122,7 +122,7 @@ export default function Dashboard() {
     <div className="p-4 max-w-5xl mx-auto space-y-6">
 
       <div>
-        <h1>Welcome, {session?.user?.email} 👋 {session?.user && <LogoutButton />}</h1>
+        <h1>Welcome, {session?.user.username} 👋 {session?.user && <LogoutButton />}</h1>
         
       </div>
       <h1 className="text-3xl font-bold">🍽️ Restaurant Dashboard</h1>

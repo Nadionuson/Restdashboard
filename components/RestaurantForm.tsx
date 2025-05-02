@@ -15,13 +15,9 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
   const [status, setStatus] = useState<RestaurantStatus>('Want to go');
+  const [createdAt, setCreatedAt] = useState<string | Date>('');
+  const [updatedAt, setUpdatedAt] = useState<string | Date>('');
   const [highlights, setHighlights] = useState('');
-  const [lastVisitedDate, setLastVisitedDate] = useState<string>(() => {
-    if (initialData?.lastVisitedDate) {
-      return new Date(initialData.lastVisitedDate).toISOString().split('T')[0];
-    }
-    return '';
-  });
   const [isPrivate, setIsPrivate] = useState(initialData?.isPrivate ?? false);
   const [evaluation, setEvaluation] = useState<Evaluation>({
     locationRating: 0,
@@ -34,8 +30,6 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
   const [selectedHashtags, setSelectedHashtags] = useState<Hashtag[]>([]);
 
   const [availableHashtags, setAvailableHashtags] = useState<Hashtag[]>([]);
-
-  const ALLOWED_HASHTAGS = ['Date', 'Family', 'Sangria', 'Dessert', 'Pateo', 'Rooftop'];
 
   const handleSelectHashtag = (hashtag: Hashtag) => {
     setSelectedHashtags((prev) => [...prev, hashtag]);
@@ -71,6 +65,8 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       setEvaluation(initialData.evaluation);
       setSelectedHashtags(initialData.hashtags || []);
       setIsPrivate(initialData.isPrivate ?? false);
+      setCreatedAt(initialData.createdAt);
+      setUpdatedAt(initialData.updatedAt);
     }
   }, [initialData]);
 
@@ -98,11 +94,11 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       location,
       status,
       highlights,
-      lastVisitedDate: status === 'Tried it' && lastVisitedDate ? new Date(lastVisitedDate) : null,
       evaluation,
       hashtags: selectedHashtags,
       isPrivate: isPrivate,
-
+      createdAt,
+      updatedAt,
     };
     onSubmit(newRestaurant);
     window.location.reload();
@@ -134,17 +130,6 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
                 <option value="Tried it">Tried it</option>
               </select>
             </div>
-            {status === 'Tried it' && (
-              <div className="flex-1">
-                <label className="block text-xs font-medium">Last Visited Date</label>
-                <Input
-                  className="w-full border p-2 rounded text-xs"
-                  type="date"
-                  value={lastVisitedDate}
-                  onChange={(e) => setLastVisitedDate(e.target.value)}
-                />
-              </div>
-            )}
           </div>
 
           {/* Line 2: Status + Date */}

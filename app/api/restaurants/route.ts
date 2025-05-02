@@ -26,7 +26,8 @@
         owner: {
           select: {
             email: true,
-            id: true
+            id: true,
+            username: true, 
           }
         }
       }
@@ -62,7 +63,6 @@
         location,
         status,
         highlights,
-        lastVisitedDate,
         evaluation,
         hashtags,
       } = data;
@@ -77,7 +77,6 @@
           highlights: data.highlights,
           ownerId: user.id,
           isPrivate: data.private ?? false,
-          lastVisitedDate: data.lastVisitedDate ? new Date(data.lastVisitedDate) : null,
           hashtags: {
             connectOrCreate: hashtags.map((tag: { name: string }) => ({
               where: { name: tag.name.toLowerCase().trim() },
