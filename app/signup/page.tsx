@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { error } from 'console';
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('');
@@ -30,6 +31,7 @@ export default function SignUpPage() {
           setSuggestions(errorData.suggestions);
         }
         alert(errorData.message || 'Signup failed');
+        console.error(error);
       }
     } catch (error) {
       console.error('Signup error:', error);
