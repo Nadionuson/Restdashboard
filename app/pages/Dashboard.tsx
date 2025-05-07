@@ -23,20 +23,19 @@ export default function Dashboard() {
   const [nameSearchFilter, setNameSearchFilter] = useState('');
   const [hashtagFilter, setHashtagFilter] = useState('');
 
+  const [showMineOnly, setShowMineOnly] = useState(true);
+  const [justFriends, setJustFriends] = useState(false); // placeholder for future logic
+
   const router = useRouter();
   const { data: session, status } = useSession();
-
   const currentUserId = session?.user?.id ? Number(session.user.id) : undefined;
 
-  // Redirect unauthenticated users
   useEffect(() => {
-    console.log(status);
     if (status === 'unauthenticated') {
       router.replace('/signin');
     }
   }, [status, router]);
 
-  // Fetch location data only once on mount
   useEffect(() => {
     const fetchLocations = async () => {
       try {
@@ -48,10 +47,10 @@ export default function Dashboard() {
       }
     };
     fetchLocations();
-  }, []); // Empty dependency array ensures this runs only once
+  }, []);
 
-  // Filter restaurants based on filters
   const filteredRestaurants = restaurants.filter((r) => {
+    const matchesMine = showMineOnly ? r.owner?.id === currentUserId : true;
     const matchesLocation = locationFilter ? r.location === locationFilter : true;
     const matchesStatus = statusFilter ? r.status === statusFilter : true;
     const matchesFinalEvaluation = finalEvaluationFilter
@@ -65,6 +64,7 @@ export default function Dashboard() {
       : true;
 
     return (
+      matchesMine &&
       matchesLocation &&
       matchesStatus &&
       matchesFinalEvaluation &&
@@ -73,7 +73,6 @@ export default function Dashboard() {
     );
   });
 
-  // Handle saving or editing a restaurant
   const handleSave = async (restaurant: Restaurant) => {
     const isEdit = restaurant.id > 0;
     const endpoint = isEdit ? `/api/restaurants/${restaurant.id}` : '/api/restaurants';
@@ -96,7 +95,6 @@ export default function Dashboard() {
     }
   };
 
-  // Handle restaurant deletion
   const handleDelete = async (id: number) => {
     try {
       const res = await fetch(`/api/restaurants/${id}`, { method: 'DELETE' });
@@ -108,25 +106,41 @@ export default function Dashboard() {
     }
   };
 
-  // ✅ Here we conditionally render content, but NOT conditionally call hooks
   if (status === 'loading') {
     return <div>Loading...</div>;
   }
 
   return (
-    
-      // Ensure session is available before proceeding
-  //if (status === 'loading') return <p>Loading...</p>;
-
-    
     <div className="p-4 max-w-5xl mx-auto space-y-6">
-
       <div>
-        <h1>Welcome, {session?.user.username} 👋 {session?.user && <LogoutButton />}</h1>
-        
+        <h1>
+          Welcome, {session?.user.username} 👋 {session?.user && <LogoutButton />}
+        </h1>
       </div>
+
       <h1 className="text-3xl font-bold">🍽️ Restaurant Dashboard</h1>
-      
+
+      {/* ✅ Checkboxes for filters */}
+      <div className="flex items-center gap-4 mt-4">
+        <label className="flex items-center gap-2 text-lightText">
+          <input
+            type="checkbox"
+            checked={showMineOnly}
+            onChange={() => setShowMineOnly((prev) => !prev)}
+            className="accent-primary"
+          />
+          My Restaurants
+        </label>
+        <label className="flex items-center gap-2 text-lightText">
+          <input
+            type="checkbox"
+            checked={justFriends}
+            onChange={() => setJustFriends((prev) => !prev)}
+            className="accent-primary"
+          />
+          Just Friends
+        </label>
+      </div>
 
       <DashboardFilters
         locations={locations}
@@ -151,7 +165,8 @@ export default function Dashboard() {
         currentUserId={currentUserId}
         handleDelete={handleDelete}
         setShowModal={setShowModal}
-        setEditing={setEditing}       />
+        setEditing={setEditing}
+      />
 
       <RestaurantModal
         showModal={showModal}
