@@ -32,6 +32,7 @@
     "src/**/*",
     "app",
     "pages",
+    "playwright.config.ts", "tests/**/*",
     "types"
 , "prisma/scripts/updateRestaurantsWithIdAndIsPrivate.js"  ],
   "exclude": [
