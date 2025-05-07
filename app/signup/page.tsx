@@ -11,6 +11,11 @@ export default function SignUpPage() {
   const [username, setUsername] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
+  // Function to handle username extraction from email
+  const handleEmailBlur = () => {
+    const extractedUsername = email.split('@')[0];
+    setUsername(extractedUsername);
+  };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +58,7 @@ export default function SignUpPage() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            onBlur={handleEmailBlur} // Trigger username extraction when the email input loses focus
             required
             className="w-full p-3 rounded-md bg-darkBackground text-lightText"
           />
