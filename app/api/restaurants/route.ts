@@ -17,7 +17,7 @@
       where:{
         OR: [
           { ownerId: Number(userId) },          // Your own
-          { isPrivate: false }                   // Public others
+          { privacyLevel: "PUBLIC" }                   // Public others
         ]
       },
       include: { 
@@ -76,7 +76,7 @@
           status: data.status,
           highlights: data.highlights,
           ownerId: user.id,
-          isPrivate: data.private ?? false,
+          privacyLevel: data.private ?? false,
           hashtags: {
             connectOrCreate: hashtags.map((tag: { name: string }) => ({
               where: { name: tag.name.toLowerCase().trim() },

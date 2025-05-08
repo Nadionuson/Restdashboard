@@ -7,19 +7,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum PrivacyLevel {
+  PUBLIC
+  PRIVATE
+  FRIENDS_ONLY
+}
+
 model Restaurant {
   id              Int         @id @default(autoincrement())
   name            String
   location        String
   status          String
   highlights      String?
-  isPrivate       Boolean?
   evaluation      Evaluation?
   hashtags        Hashtag[]   @relation("RestaurantHashtags")
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   ownerId         Int?
   owner           User?       @relation(fields: [ownerId], references: [id])
+  privacyLevel    PrivacyLevel @default(PUBLIC) // NEW
+  comments        Comment[]    // NEW
 }
 
 model Evaluation {
@@ -57,14 +64,43 @@ model RestaurantHistory {
 }
 
 model User {
-  id               Int      @id @default(autoincrement())
-  email            String   @unique
-  username         String   @unique
-  passwordHash     String?  // for traditional login
-  loginCode        String?  // one-time code for passwordless login
-  loginCodeExpires DateTime? // when the code expires
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id               Int       @id @default(autoincrement())
+  email            String    @unique
+  username         String    @unique
+  passwordHash     String?
+  loginCode        String?
+  loginCodeExpires DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  restaurants      Restaurant[] // assuming each user owns multiple restaurants
+  restaurants         Restaurant[]
+  comments            Comment[]
+
+  sentFriendships     Friend[] @relation("SentFriendRequests")
+  receivedFriendships Friend[] @relation("ReceivedFriendRequests")
+}
+
+model Friend {
+  id           Int      @id @default(autoincrement())
+  requesterId  Int
+  addresseeId  Int
+  status       String   // "pending", "accepted", "rejected"
+  createdAt    DateTime @default(now())
+
+  requester    User     @relation("SentFriendRequests", fields: [requesterId], references: [id])
+  addressee    User     @relation("ReceivedFriendRequests", fields: [addresseeId], references: [id])
+
+  @@unique([requesterId, addresseeId])
+}
+
+
+model Comment {
+  id           Int       @id @default(autoincrement())
+  content      String
+  userId       Int
+  restaurantId Int
+  createdAt    DateTime  @default(now())
+
+  user         User       @relation(fields: [userId], references: [id])
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
 }
