@@ -4,6 +4,7 @@ import { Input } from './ui/input';
 import { Restaurant, Evaluation, getFinalEvaluation, RestaurantStatus, Hashtag } from '../app/types/restaurant';
 import StarRating from './ui/starRating';
 import HashtagSelector from './hashtagSelector'; // Make sure the import path is correct
+import router from 'next/router';
 
 interface RestaurantFormProps {
   initialData: Restaurant | null;
@@ -50,6 +51,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
 
       } catch (err) {
         console.error('Failed to load hashtags', err);
+        router.push('/error');
       }
     };
 

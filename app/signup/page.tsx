@@ -40,7 +40,7 @@ export default function SignUpPage() {
       }
     } catch (error) {
       console.error('Signup error:', error);
-      alert('Something went wrong.');
+      router.push('/error');
     }
   };
 

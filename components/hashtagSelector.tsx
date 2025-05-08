@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Hashtag } from '@/app/types/restaurant';
 
 interface HashtagSelectorProps {
@@ -15,11 +15,10 @@ const HashtagSelector: React.FC<HashtagSelectorProps> = ({
   onRemoveHashtag,
 }) => {
   const [newHashtagName, setNewHashtagName] = useState('');
-  const [selectedHashtag, setSelectedHashtag] = useState<string>(''); // Track the selected hashtag
-  
+  const [selectedHashtag, setSelectedHashtag] = useState<string>('');
 
   const handleAddHashtag = () => {
-    const trimmed = newHashtagName.trim();
+    let trimmed = newHashtagName.trim().replace(/^#/, ''); // Remove leading #
 
     // Prevent adding empty or duplicate hashtags
     if (!trimmed || selectedHashtags.some(h => h.name === trimmed)) return;
@@ -43,26 +42,27 @@ const HashtagSelector: React.FC<HashtagSelectorProps> = ({
     };
 
     onSelectHashtag(hashtag);
-    setSelectedHashtag(selectedName); // Update the selected hashtag state
+    setSelectedHashtag(selectedName);
   };
 
-  console.log("Available Hashtags:", availableHashtags);
   return (
     <div>
       {/* Select Hashtags Dropdown */}
       <div>
-        <label htmlFor="hashtag" className="block text-sm font-medium text-gray-700">Select Hashtags</label>
+        <label htmlFor="hashtag" className="block text-sm font-medium text-gray-700">
+          Select Hashtags
+        </label>
         <div className="space-y-2">
           <select
             id="hashtag"
             className="w-full p-2 border border-gray-300 rounded"
             onChange={handleSelectHashtag}
-            value={selectedHashtag} // Set the selected value here
+            value={selectedHashtag}
           >
             <option value="" disabled>Select a hashtag</option>
             {availableHashtags.map((hashtag) => (
-              <option key={hashtag.id} value={hashtag.name}>  {/* Using id for key */}
-               #{hashtag.name} 
+              <option key={hashtag.id} value={hashtag.name}>
+                #{hashtag.name}
               </option>
             ))}
           </select>
@@ -71,7 +71,9 @@ const HashtagSelector: React.FC<HashtagSelectorProps> = ({
 
       {/* Add New Hashtag */}
       <div className="mt-4">
-        <label htmlFor="newHashtag" className="block text-sm font-medium text-gray-700">Add New Hashtag</label>
+        <label htmlFor="newHashtag" className="block text-sm font-medium text-gray-700">
+          Add New Hashtag
+        </label>
         <div className="flex space-x-2">
           <input
             id="newHashtag"
@@ -79,7 +81,7 @@ const HashtagSelector: React.FC<HashtagSelectorProps> = ({
             value={newHashtagName}
             onChange={(e) => setNewHashtagName(e.target.value)}
             className="border p-2 rounded"
-            placeholder="New hashtag"
+            placeholder="e.g. sangria"
           />
           <button
             type="button"
@@ -89,10 +91,15 @@ const HashtagSelector: React.FC<HashtagSelectorProps> = ({
             Add
           </button>
         </div>
+        <p className="text-xs text-gray-500 mt-1">
+          Don’t include the <span className="font-mono">#</span> — we’ll add it for you.
+        </p>
+        {newHashtagName.trim() && (
+          <p className="text-sm text-gray-700 mt-1">
+            Preview: <span className="font-mono text-blue-600">#{newHashtagName.trim().replace(/^#/, '')}</span>
+          </p>
+        )}
       </div>
-
-      {/* Display Selected Hashtags */}
-      
     </div>
   );
 };

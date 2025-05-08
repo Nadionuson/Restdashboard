@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Restaurant } from '../types/restaurant';
+import router from 'next/router';
 
 export const useRestaurants = () => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -18,14 +19,21 @@ export const useRestaurants = () => {
     fetchLocations();
     } catch(err){
       console.error('Failed to fetch restaurants', err);
+      router.push('/error');
     }
   };
 
   // Fetch locations for dropdown filter
   const fetchLocations = async () => {
+    try{
     const res = await fetch('/api/locations');
     const data = await res.json();
     setLocations(data.locations);
+    }
+    catch(err){
+      console.error('Failed to fetch locations', err);
+      router.push('/error');
+    }
   };
 
   useEffect(() => {

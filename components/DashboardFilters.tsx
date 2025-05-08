@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Filters } from './ui/filter';
+import router from 'next/router';
 
 interface DashboardFiltersProps {
   locations: string[];
@@ -40,6 +41,7 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
         setHashtags(data.map((tag: { name: string }) => tag.name));
       } catch (err) {
         console.error('Failed to fetch hashtags', err);
+        router.push('/error');
       }
     };
 

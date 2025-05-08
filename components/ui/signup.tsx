@@ -1,3 +1,4 @@
+import router from 'next/router';
 import React, { useState } from 'react';
 
 const SignUp = () => {
@@ -20,6 +21,7 @@ const SignUp = () => {
     } else {
       const data = await response.json();
       setErrorMessage(data.error || 'An error occurred.');
+      router.push('/error');
     }
   };
 

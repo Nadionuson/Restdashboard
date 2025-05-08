@@ -44,6 +44,7 @@ export default function Dashboard() {
         setLocations(data);
       } catch (error) {
         console.error('Failed to fetch locations', error);
+        router.push('/error');
       }
     };
     fetchLocations();
@@ -103,6 +104,7 @@ export default function Dashboard() {
       await refetch();
     } catch (error) {
       console.error('Error deleting restaurant:', error);
+      router.push('/error');
     }
   };
 
