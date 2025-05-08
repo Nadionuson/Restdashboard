@@ -2,16 +2,15 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { error } from 'console';
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [code, setCode] = useState(''); // One-time code
   const router = useRouter();
   const [username, setUsername] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
-  // Function to handle username extraction from email
   const handleEmailBlur = () => {
     const extractedUsername = email.split('@')[0];
     setUsername(extractedUsername);
@@ -25,10 +24,23 @@ export default function SignUpPage() {
       const res = await fetch('/api/auth/register', {  // Assuming your signup API
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, username, password }),
+        body: JSON.stringify({ email, username, password, code }), // Send code in registration
       });
 
+      if (!res.ok) {
+        // Try to extract error message if response body exists
+        let message = 'Failed to request OTP';
+        try {
+          const errorData = await res.json();
+          message = errorData?.message || message;
+        } catch (jsonErr) {
+          // No JSON body or parsing error
+        }
+        throw new Error(message);
+      }
+
       if (res.ok) {
+        alert('OTP sent! Check your email.');
         router.push('/signin');
       } else {
         const errorData = await res.json();
@@ -78,6 +90,14 @@ export default function SignUpPage() {
             required
             className="w-full p-3 rounded-md bg-darkBackground text-lightText"
           />
+          <input
+            type="text"
+            placeholder="One-time Code"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            required
+            className="w-full p-3 rounded-md bg-darkBackground text-lightText"
+          />
         </div>
 
         {suggestions.length > 0 && (
@@ -99,7 +119,7 @@ export default function SignUpPage() {
         )}
 
         <button type="submit" className="w-full bg-primary text-white py-3 rounded-md">
-          Create Account
+          Sign Up
         </button>
 
         <p className="text-center text-sm text-mutedText">
