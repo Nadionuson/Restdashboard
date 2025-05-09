@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
-type User = { id: number; email: string; name?: string };
+type User = { id: number; email: string; username?: string };
 
 export default function FriendsTab() {
   const [search, setSearch] = useState('');
@@ -12,11 +12,31 @@ export default function FriendsTab() {
   const [incomingRequests, setIncomingRequests] = useState<User[]>([]);
   const [sentRequests, setSentRequests] = useState<User[]>([]);
   const [searchResult, setSearchResult] = useState<User | null>(null);
+  const [noUserFound, setNoUserFound] = useState(false);
 
   useEffect(() => {
     fetchFriends();
     fetchRequests();
   }, []);
+
+  async function handleSendInvite() {
+    const res = await fetch('/api/friends/invite', {
+      method: 'POST',
+      body: JSON.stringify({ email: search }), // Use search for the email
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (res.ok) {
+      alert('Invitation sent!');
+      setSearch(''); // Clear search
+      setSearchResult(null); // Reset search result
+    } else {
+      const errorData = await res.json();
+      alert(errorData.error || 'Something went wrong');
+    }
+  }
 
   async function fetchFriends() {
     const res = await fetch('/api/friends');
@@ -39,7 +59,9 @@ export default function FriendsTab() {
     const res = await fetch(`/api/friends/search?query=${encodeURIComponent(search)}`);
     if (res.ok) {
       const data = await res.json();
-      setSearchResult(data.user || null);
+      const user = data.user || null;
+      setSearchResult(user);
+      setNoUserFound(!user);
     }
   }
 
@@ -50,6 +72,7 @@ export default function FriendsTab() {
     });
     setSearch('');
     setSearchResult(null);
+    setNoUserFound(false);
     fetchRequests();
   }
 
@@ -78,6 +101,10 @@ export default function FriendsTab() {
     fetchFriends();
   }
 
+  function validateEmail(email: string) {
+    return /\S+@\S+\.\S+/.test(email);
+  }
+
   return (
     <div className="space-y-6">
       {/* Add/Search Friend */}
@@ -92,10 +119,23 @@ export default function FriendsTab() {
           />
           <Button onClick={handleSearch} disabled={!search.trim()}>Search</Button>
         </div>
+
         {searchResult && (
           <div className="mt-2 flex justify-between items-center bg-muted p-2 rounded-md">
-            <span>{searchResult.email}</span>
+            <div key={searchResult.id}>
+              {(searchResult.username || 'Unnamed')} ({searchResult.email})
+            </div>
             <Button size="sm" onClick={() => sendRequest(searchResult.id)}>Send Request</Button>
+          </div>
+        )}
+
+        {noUserFound && (
+          <div className="mt-3 p-3 bg-muted rounded-md border border-red-500 text-red-600">
+            <p>No users found. Do you want to invite them to use the app?
+            <Button onClick={handleSendInvite} disabled={!search.trim()}>
+              Send Invitation
+            </Button>
+            </p>
           </div>
         )}
       </div>

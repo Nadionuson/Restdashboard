@@ -23,3 +23,22 @@ export async function sendLoginCodeEmail(to: string, code: string) {
     console.error('Error sending email:', error);
   }
 }
+
+export async function sendInvitationEmail(email: string) {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail', // You can change this to your preferred email provider
+    auth: {
+      user: process.env.EMAIL_USER, // Your email
+      pass: process.env.EMAIL_PASS, // Your email password or app-specific password
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Invitation to join our platform',
+    text: `Hey! We noticed you're interested in joining our platform. Please sign up by visiting our site.`,
+  };
+
+  await transporter.sendMail(mailOptions);
+}

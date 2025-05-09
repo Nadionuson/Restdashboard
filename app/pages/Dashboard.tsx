@@ -11,18 +11,19 @@ import { useRestaurants } from '@/app/hooks/useRestaurant';
 import { Restaurant } from '@/app/types/restaurant';
 import { DashboardFilters } from '@/components/DashboardFilters';
 import { RestaurantModal } from '@/components/DashboardModal';
+import Link from 'next/link'; // Add Link import
 
 export default function Dashboard() {
   const { restaurants, refetch } = useRestaurants();
   const [editing, setEditing] = useState<Restaurant | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [locations, setLocations] = useState<string[]>([]);
+  const [locations, setLocations] = useState<string[]>([]); 
   const [locationFilter, setLocationFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [finalEvaluationFilter, setFinalEvaluationFilter] = useState('');
   const [nameSearchFilter, setNameSearchFilter] = useState('');
   const [hashtagFilter, setHashtagFilter] = useState('');
-
+  
   const [showMineOnly, setShowMineOnly] = useState(true);
   const [justFriends, setJustFriends] = useState(false); // placeholder for future logic
 
@@ -116,7 +117,15 @@ export default function Dashboard() {
     <div className="p-4 max-w-5xl mx-auto space-y-6">
       <div>
         <h1>
-          Welcome, {session?.user.username} 👋 {session?.user && <LogoutButton />}
+          Welcome, {session?.user.username} 👋 
+          {session?.user && (
+            <>
+              <Link href="/account">
+                <Button variant="outline" size="sm" className="ml-4">Go to Account</Button>
+              </Link>
+              <LogoutButton />
+            </>
+          )}
         </h1>
       </div>
 

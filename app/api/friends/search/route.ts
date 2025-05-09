@@ -16,11 +16,11 @@ export async function GET(req: NextRequest) {
   const user = await db.user.findFirst({
     where: {
       OR: [
-        { email: query },
+       { email: { contains: query, mode: 'insensitive' } },
         { username: { contains: query, mode: 'insensitive' } },
       ],
     },
-    select: { id: true, email: true },
+    select: { id: true, email: true, username: true },
   });
 
   return NextResponse.json({ user });
