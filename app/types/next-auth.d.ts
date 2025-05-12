@@ -8,7 +8,8 @@ declare module "next-auth" {
       name?: string | null
       email?: string | null
       image?: string | null
-      username?: string | null 
+      username?: string | null
+      friendIds?: number[]; 
     }
   }
 
@@ -23,6 +24,7 @@ declare module "next-auth" {
       id: string
       email: string
       username: string
+      friendIds?: number[];
     }
   }
 }

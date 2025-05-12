@@ -11,25 +11,34 @@ import { useRestaurants } from '@/app/hooks/useRestaurant';
 import { Restaurant } from '@/app/types/restaurant';
 import { DashboardFilters } from '@/components/DashboardFilters';
 import { RestaurantModal } from '@/components/DashboardModal';
-import Link from 'next/link'; // Add Link import
+import Link from 'next/link';
 
 export default function Dashboard() {
+
+  
+
   const { restaurants, refetch } = useRestaurants();
   const [editing, setEditing] = useState<Restaurant | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [locations, setLocations] = useState<string[]>([]); 
+  const [locations, setLocations] = useState<string[]>([]);
+
+  // Filter states
   const [locationFilter, setLocationFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [finalEvaluationFilter, setFinalEvaluationFilter] = useState('');
   const [nameSearchFilter, setNameSearchFilter] = useState('');
   const [hashtagFilter, setHashtagFilter] = useState('');
-  
-  const [showMineOnly, setShowMineOnly] = useState(true);
-  const [justFriends, setJustFriends] = useState(false); // placeholder for future logic
+  const [visibilityFilter, setVisibilityFilter] = useState<string[]>(['mine']);
 
   const router = useRouter();
   const { data: session, status } = useSession();
   const currentUserId = session?.user?.id ? Number(session.user.id) : undefined;
+  const friendIds: number[] = session?.user?.friendIds ?? [];
+
+console.log('Session:', session);
+console.log('Current user ID:', currentUserId);
+console.log('Restaurants:', restaurants.map(r => ({ id: r.id, owner: r.OwnerId, name: r.name })));
+
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -52,7 +61,19 @@ export default function Dashboard() {
   }, []);
 
   const filteredRestaurants = restaurants.filter((r) => {
-    const matchesMine = showMineOnly ? r.owner?.id === currentUserId : true;
+    const isMine = Number(r.OwnerId) === currentUserId;
+    const isFriends = friendIds.includes(r.OwnerId);
+    const isPublic = r.privacyLevel === 'PUBLIC';
+    console.log('CurrentUserId', currentUserId, 'Restaurant.OwnerId', r.OwnerId);
+
+
+    const matchesVisibility =
+      visibilityFilter.length === 0
+        ? true
+        : (visibilityFilter.includes('mine') && isMine) ||
+          (visibilityFilter.includes('friends') && isFriends && r.privacyLevel !== 'PRIVATE') ||
+          (visibilityFilter.includes('public') && isPublic);
+
     const matchesLocation = locationFilter ? r.location === locationFilter : true;
     const matchesStatus = statusFilter ? r.status === statusFilter : true;
     const matchesFinalEvaluation = finalEvaluationFilter
@@ -66,7 +87,7 @@ export default function Dashboard() {
       : true;
 
     return (
-      matchesMine &&
+      matchesVisibility &&
       matchesLocation &&
       matchesStatus &&
       matchesFinalEvaluation &&
@@ -131,28 +152,35 @@ export default function Dashboard() {
 
       <h1 className="text-3xl font-bold">🍽️ Restaurant Dashboard</h1>
 
-      {/* ✅ Checkboxes for filters */}
-      <div className="flex items-center gap-4 mt-4">
-        <label className="flex items-center gap-2 text-lightText">
-          <input
-            type="checkbox"
-            checked={showMineOnly}
-            onChange={() => setShowMineOnly((prev) => !prev)}
-            className="accent-primary"
-          />
-          My Restaurants
-        </label>
-        <label className="flex items-center gap-2 text-lightText">
-          <input
-            type="checkbox"
-            checked={justFriends}
-            onChange={() => setJustFriends((prev) => !prev)}
-            className="accent-primary"
-          />
-          Just Friends
-        </label>
+      {/* ✅ Visibility Filter */}
+      <div className="flex items-center gap-2 mt-4 flex-wrap text-sm">
+        {['mine', 'friends', 'public'].map((option) => (
+          <label
+            key={option}
+            className={`px-3 py-1 rounded-full border cursor-pointer
+              ${visibilityFilter.includes(option)
+                ? 'bg-primary text-white'
+                : 'bg-muted text-muted-foreground'}`}
+          >
+            <input
+              type="checkbox"
+              className="hidden"
+              checked={visibilityFilter.includes(option)}
+              onChange={() => {
+                setVisibilityFilter((prev) =>
+                  prev.includes(option)
+                    ? prev.filter((v) => v !== option)
+                    : [...prev, option]
+                );
+              }}
+            />
+            {option === 'mine' ? 'My Restaurants' :
+              option === 'friends' ? 'Friends' : 'Public'}
+          </label>
+        ))}
       </div>
 
+      {/* ✅ Filters */}
       <DashboardFilters
         locations={locations}
         locationFilter={locationFilter}
@@ -167,10 +195,12 @@ export default function Dashboard() {
         setHashtagFilter={setHashtagFilter}
       />
 
+      {/* ✅ Add Restaurant Button */}
       <Button variant="default" onClick={() => { setEditing(null); setShowModal(true); }}>
         Add New Restaurant
       </Button>
 
+      {/* ✅ Restaurant List */}
       <RestaurantList
         restaurants={filteredRestaurants}
         currentUserId={currentUserId}
@@ -179,6 +209,7 @@ export default function Dashboard() {
         setEditing={setEditing}
       />
 
+      {/* ✅ Restaurant Modal */}
       <RestaurantModal
         showModal={showModal}
         setShowModal={setShowModal}

@@ -28,8 +28,9 @@ export type Restaurant = {
   evaluation: Evaluation;
   highlights: string;
   hashtags?: Hashtag[];
-  isPrivate: boolean;
+  privacyLevel: 'PUBLIC' | 'PRIVATE' | 'FRIENDS_ONLY';
   owner?: User;  // Include user info
+  OwnerId: number;
   createdAt: string | Date;
   updatedAt: string | Date;
 };

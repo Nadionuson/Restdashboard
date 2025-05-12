@@ -73,25 +73,47 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id as string
-        token.email = user.email; 
-        token.username = user.username || user.name;
-      }
-      return token
-    },
-    async session({ session, token, user }) {
-      if (token) {
-        console.log("Session:", session)
-        session.user = {
-          ...(session.user || {}),
-          id: token.id as string,
-          email: token.email as string,
-          username: token.username as string, 
-        };
-      }
-      return session
-    },
+  if (user) {
+    token.id = typeof user.id === 'number' ? user.id : Number(user.id)
+    token.email = user.email;
+    token.username = user.username || user.name;
+
+    // Fetch friend IDs here
+    const dbUser = await prisma.user.findUnique({
+      where: { id: Number(user.id) },
+      include: {
+        sentFriendships: {
+          where: { status: 'ACCEPTED' },
+          select: { addresseeId: true },
+        },
+        receivedFriendships: {
+          where: { status: 'ACCEPTED' },
+          select: { requesterId: true },
+        },
+      },
+    });
+
+    if (dbUser) {
+      const sentIds = dbUser.sentFriendships.map((f) => f.addresseeId);
+      const receivedIds = dbUser.receivedFriendships.map((f) => f.requesterId);
+      token.friendIds = [...sentIds, ...receivedIds];
+    }
+  }
+
+  return token;
+},
+    async session({ session, token }) {
+  if (token) {
+    session.user = {
+      ...(session.user || {}),
+      id: token.id as string,
+      email: token.email as string,
+      username: token.username as string,
+      friendIds: token.friendIds as number[],
+    };
+  }
+  return session;
+},
   },
   secret: process.env.NEXTAUTH_SECRET,
   pages: {

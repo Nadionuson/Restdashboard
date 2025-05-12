@@ -8,33 +8,57 @@
 
   // GET all restaurants
   export async function GET() {
-    
-    const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
 
-    const userId = session?.user?.id; 
-    
-    const restaurants = await prisma.restaurant.findMany({
-      where:{
-        OR: [
-          { ownerId: Number(userId) },          // Your own
-          { privacyLevel: "PUBLIC" }                   // Public others
-        ]
-      },
-      include: { 
-        evaluation: true, 
-        hashtags: true, 
-        owner: {
-          select: {
-            email: true,
-            id: true,
-            username: true, 
-          }
-        }
-      }
-    })
-
-    return NextResponse.json(restaurants)
+  if (!userId) {
+    return NextResponse.json({ restaurants: [], friendIds: [] });
   }
+
+  const numericUserId = Number(userId);
+
+  // ✅ Get confirmed friends (both directions)
+  const userWithFriends = await prisma.user.findUnique({
+    where: { id: numericUserId },
+    include: {
+      sentFriendships: {
+        where: { status: 'accepted' },
+        select: { addresseeId: true },
+      },
+      receivedFriendships: {
+        where: { status: 'accepted' },
+        select: { requesterId: true },
+      },
+    },
+  });
+
+  const friendIds = [
+    ...userWithFriends?.sentFriendships.map((f) => f.addresseeId) ?? [],
+    ...userWithFriends?.receivedFriendships.map((f) => f.requesterId) ?? [],
+  ];
+
+  // ✅ Fetch relevant restaurants (own + public)
+  const restaurants = await prisma.restaurant.findMany({
+    where: {
+      OR: [
+        { ownerId: numericUserId },
+        { privacyLevel: 'PUBLIC' },
+      ],
+    },
+    include: {
+      evaluation: true,
+      hashtags: true,
+      owner: {
+        select: {
+          id: true,
+          username: true,
+        },
+      },
+    },
+  });
+
+  return NextResponse.json({ restaurants, friendIds });
+}
 
   // POST create new restaurant
   export async function POST(req: Request) {

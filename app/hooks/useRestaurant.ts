@@ -1,37 +1,20 @@
 // hooks/useRestaurants.ts
-
 import { useState, useEffect } from 'react';
 import { Restaurant } from '../types/restaurant';
 import router from 'next/router';
 
 export const useRestaurants = () => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [filteredRestaurants, setFilteredRestaurants] = useState<Restaurant[]>([]);
-  const [locations, setLocations] = useState<string[]>([]);
+  const [friendIds, setFriendIds] = useState<number[]>([]);
 
-  // Fetch restaurants on page load
   const fetchRestaurants = async () => {
     try {
-    const res = await fetch('/api/restaurants');
-    const data = await res.json();
-    setRestaurants(data);
-    setFilteredRestaurants(data); // Initially, show all restaurants
-    fetchLocations();
-    } catch(err){
+      const res = await fetch('/api/restaurants');
+      const data = await res.json();
+      setRestaurants(data.restaurants || []);
+      setFriendIds(data.friendIds || []);
+    } catch (err) {
       console.error('Failed to fetch restaurants', err);
-      router.push('/error');
-    }
-  };
-
-  // Fetch locations for dropdown filter
-  const fetchLocations = async () => {
-    try{
-    const res = await fetch('/api/locations');
-    const data = await res.json();
-    setLocations(data.locations);
-    }
-    catch(err){
-      console.error('Failed to fetch locations', err);
       router.push('/error');
     }
   };
@@ -40,5 +23,5 @@ export const useRestaurants = () => {
     fetchRestaurants();
   }, []);
 
-  return { restaurants, refetch: fetchRestaurants, filteredRestaurants, setFilteredRestaurants, locations };
+  return { restaurants, friendIds, refetch: fetchRestaurants };
 };
