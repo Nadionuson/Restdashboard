@@ -72,7 +72,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         location: data.location,
         status: data.status,
         highlights: data.highlights,
-        isPrivate: data.isPrivate,
+        privacyLevel: data.isPrivate,
         evaluation: {
           update: {
             locationRating: data.evaluation.locationRating,
