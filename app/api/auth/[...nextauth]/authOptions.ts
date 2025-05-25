@@ -82,7 +82,7 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token, user }) {
       if (token) {
-        console.log("Session:", session)
+        
         session.user = {
           ...(session.user || {}),
           id: token.id as string,
