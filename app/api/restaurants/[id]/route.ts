@@ -1,4 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, PrivacyLevel } from '@prisma/client';
+import { Console } from 'console';
 import { NextRequest, NextResponse } from 'next/server';
 
 const prisma = new PrismaClient();
@@ -25,7 +26,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const restaurantId = parseInt(id, 10);
   const data = await req.json();
-
+  console.log("passou");
+  
+  
   try {
     const currentRestaurant = await prisma.restaurant.findUnique({
       where: { id: restaurantId },
@@ -72,7 +75,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         location: data.location,
         status: data.status,
         highlights: data.highlights,
-        privacyLevel: data.isPrivate,
+        privacyLevel: data.privacyLevel,
         evaluation: {
           update: {
             locationRating: data.evaluation.locationRating,
