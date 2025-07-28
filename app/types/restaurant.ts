@@ -23,7 +23,8 @@ export type User = {
 export type Restaurant = {
   id: number;
   name: string;
-  location: string;
+  city: string;
+  detailedLocation?: string;
   status: RestaurantStatus;
   evaluation: Evaluation;
   highlights: string;

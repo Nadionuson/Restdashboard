@@ -60,7 +60,8 @@
 
       const {
         name,
-        location,
+        city,
+        detailedLocation,
         status,
         highlights,
         evaluation,
@@ -72,7 +73,8 @@
       const restaurant = await prisma.restaurant.create({
         data: {
           name: data.name,
-          location: data.location,
+          city: data.city,
+          detailedLocation: data.detailedLocation || data.city,
           status: data.status,
           highlights: data.highlights,
           ownerId: user.id,

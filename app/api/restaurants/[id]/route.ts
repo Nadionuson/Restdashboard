@@ -72,7 +72,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       where: { id: restaurantId },
       data: {
         name: data.name,
-        location: data.location,
+        city: data.city,
+        detailedLocation: data.detailedLocation || data.city,
         status: data.status,
         highlights: data.highlights,
         privacyLevel: data.privacyLevel,

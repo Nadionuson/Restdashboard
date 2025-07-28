@@ -1,8 +1,11 @@
 // components/ui/filter.tsx
 interface FiltersProps {
-  locations: string[];
-  locationFilter: string;
-  setLocationFilter: (value: string) => void;
+  city: string[];
+  cityFilter: string;
+  setcityFilter: (value: string) => void;
+  detailedLocations: string[];               // NEW
+  detailedLocationFilter: string;            // NEW
+  setDetailedLocationFilter: (value: string) => void; // NEW
   statusFilter: string;
   setStatusFilter: (value: string) => void;
   finalEvaluationFilter: string;
@@ -13,9 +16,12 @@ interface FiltersProps {
 }
 
 export const Filters = ({
-  locations,
-  locationFilter,
-  setLocationFilter,
+  city,
+  cityFilter,
+  setcityFilter,
+  detailedLocations,
+  detailedLocationFilter,
+  setDetailedLocationFilter,
   statusFilter,
   setStatusFilter,
   finalEvaluationFilter,
@@ -32,19 +38,36 @@ export const Filters = ({
         </label>
         <select
           id="location-filter"
-          value={locationFilter}
-          onChange={(e) => setLocationFilter(e.target.value)}
+          value={cityFilter}
+          onChange={(e) => setcityFilter(e.target.value)}
           className="w-full p-2 border border-gray-300 rounded"
         >
-          <option value="">All Locations</option>
-          {locations.map((loc) => (
+          <option value="">All Cities</option>
+          {city.map((loc) => (
             <option key={loc} value={loc}>
               {loc}
             </option>
           ))}
         </select>
       </div>
-
+      <div>
+        <label htmlFor="detailed-location-filter" className="block mb-1 font-medium text-gray-700">
+          Filter by Detailed Location
+        </label>
+        <select
+          id="detailed-location-filter"
+          value={detailedLocationFilter}
+          onChange={(e) => setDetailedLocationFilter(e.target.value)}
+          className="w-full p-2 border border-gray-300 rounded"
+        >
+          <option value="">All Detailed Locations</option>
+          {detailedLocations.map((dloc) => (
+            <option key={dloc} value={dloc}>
+              {dloc}
+            </option>
+          ))}
+        </select>
+      </div>
       <div>
         <label htmlFor="status-filter" className="block mb-1 font-medium text-gray-700">
           Filter by Status

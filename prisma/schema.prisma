@@ -16,7 +16,7 @@ enum PrivacyLevel {
 model Restaurant {
   id              Int         @id @default(autoincrement())
   name            String
-  city            String
+  city             String     @map("location")
   detailedLocation String?
   status          String
   highlights      String?

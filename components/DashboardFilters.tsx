@@ -5,9 +5,12 @@ import { Filters } from './ui/filter';
 import router from 'next/router';
 
 interface DashboardFiltersProps {
-  locations: string[];
-  locationFilter: string;
-  setLocationFilter: (value: string) => void;
+  cities: string[];
+  cityFilter: string;
+  setCityFilter: (value: string) => void;
+  detailedLocations: string[];                  // NEW
+  detailedLocationFilter: string;               // NEW
+  setDetailedLocationFilter: (value: string) => void; // NEW
   statusFilter: string;
   setStatusFilter: (value: string) => void;
   finalEvaluationFilter: string;
@@ -19,9 +22,12 @@ interface DashboardFiltersProps {
 }
 
 export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
-  locations,
-  locationFilter,
-  setLocationFilter,
+  cities,
+  cityFilter,
+  setCityFilter,
+  detailedLocations,
+  detailedLocationFilter,
+  setDetailedLocationFilter,
   statusFilter,
   setStatusFilter,
   finalEvaluationFilter,
@@ -65,9 +71,12 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
       </div>
 
       <Filters
-        locations={locations}
-        locationFilter={locationFilter}
-        setLocationFilter={setLocationFilter}
+        city={cities}
+        cityFilter={cityFilter}
+        setcityFilter={setCityFilter}
+        detailedLocations={detailedLocations}
+        detailedLocationFilter={detailedLocationFilter}
+        setDetailedLocationFilter={setDetailedLocationFilter}
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
         finalEvaluationFilter={finalEvaluationFilter}
