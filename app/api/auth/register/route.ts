@@ -39,10 +39,10 @@ export async function POST(req: Request) {
       console.warn('Username taken:', username);
 
       const suggestionsPool = generateUsernameSuggestions(username);
-      const existingUsernames = await prisma.user.findMany({
-        where: { username: { in: suggestionsPool } },
-        select: { username: true },
-      });
+      const existingUsernames: { username: string }[] = await prisma.user.findMany({
+  where: { username: { in: suggestionsPool } },
+  select: { username: true },
+});
 
       const takenSet = new Set(existingUsernames.map(u => u.username));
       const suggestions = suggestionsPool.filter(s => !takenSet.has(s)).slice(0, 3);

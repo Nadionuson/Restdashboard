@@ -74,7 +74,7 @@
         data: {
           name: data.name,
           city: data.city,
-          neighborhood: data.neighborhood || data.city,
+          neighborhood: data.neighborhood || data.city,  // Handle optional neighborhood
           status: data.status,
           highlights: data.highlights,
           ownerId: user.id,

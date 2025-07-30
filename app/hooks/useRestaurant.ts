@@ -28,7 +28,7 @@ export const useRestaurants = () => {
     try{
     const res = await fetch('/api/locations');
     const data = await res.json();
-    setLocations(data.locations);
+    setLocations(data.map((location: { city: string }) => location.city));
     }
     catch(err){
       console.error('Failed to fetch locations', err);

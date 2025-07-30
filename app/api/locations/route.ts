@@ -7,17 +7,15 @@ const prisma = new PrismaClient()
 // GET distinct locations
 export async function GET() {
   try {
-    const locations = await prisma.restaurant.findMany({
+    const cities: { city: string }[] = await prisma.restaurant.findMany({
       distinct: ['city'],
-      select: {
-        location: true,
-      },
+      select: { city: true },
     })
 
-    // Extract and return only the unique locations
-    const locationList = locations.map((restaurant) => restaurant.city);
-    return NextResponse.json(locationList);
-  } catch (error) {
+    // Extract and return only the unique cities
+    const cityList = cities.map((restaurant) => restaurant.city);
+    return NextResponse.json(cityList);
+  } catch (error) { 
     console.error('Failed to fetch locations:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

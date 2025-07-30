@@ -1,8 +1,9 @@
-import { PrismaClient, PrivacyLevel } from '@prisma/client';
-import { Console } from 'console';
+import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
 const prisma = new PrismaClient();
+
+type HashtagInput = { name: string };
 
 // GET: Retrieve a restaurant by ID
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -26,9 +27,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const restaurantId = parseInt(id, 10);
   const data = await req.json();
-  console.log("passou");
-  
-  
+
   try {
     const currentRestaurant = await prisma.restaurant.findUnique({
       where: { id: restaurantId },
@@ -36,8 +35,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     });
 
     const currentHashtagNames =
-      currentRestaurant?.hashtags.map((tag) => tag.name.toLowerCase().trim()) || [];
-    const newHashtags = data.hashtags.map((tag: { name: string }) =>
+      currentRestaurant?.hashtags.map((tag: { name: string }) => tag.name.toLowerCase().trim()) || [];
+
+    const newHashtags = data.hashtags.map((tag: HashtagInput) =>
       tag.name.toLowerCase().trim()
     );
 
@@ -48,7 +48,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       currentHashtagNames.includes(tag)
     );
     const hashtagsToDisconnect = currentHashtagNames.filter(
-      (tag) => !newHashtags.includes(tag)
+      (tag: string) => !newHashtags.includes(tag)
     );
 
     const createdHashtags = await Promise.all(
@@ -58,11 +58,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         });
 
         if (!existingHashtag) {
-          return await prisma.hashtag.create({
-            data: {
-              name,
-            },
-          });
+          return await prisma.hashtag.create({ data: { name } });
         }
         return existingHashtag;
       })
@@ -92,7 +88,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
             ...hashtagsToConnect.map((name: string) => ({ name })),
             ...createdHashtags.map((tag) => ({ id: tag.id })),
           ],
-          disconnect: hashtagsToDisconnect.map((name) => ({ name })),
+          disconnect: hashtagsToDisconnect.map((name: string) => ({ name })),
         },
       },
       include: { evaluation: true, hashtags: true },
@@ -119,18 +115,16 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
       include: { hashtags: true },
     });
 
-    if (restaurant && restaurant.hashtags) {
-      await prisma.restaurant.update({
-        where: { id: restaurantId },
-        data: {
-          hashtags: {
-            disconnect: restaurant.hashtags.map((hashtag) => ({
-              id: hashtag.id,
-            })),
-          },
-        },
-      });
-    }
+    if (restaurant?.hashtags?.length) {
+  await prisma.restaurant.update({
+    where: { id: restaurantId },
+    data: {
+      hashtags: {
+        disconnect: restaurant.hashtags.map((hashtag: { id: number }) => ({ id: hashtag.id })),
+      },
+    },
+  });
+}
 
     await prisma.evaluation.deleteMany({ where: { restaurantId } });
     const deletedRestaurant = await prisma.restaurant.delete({
@@ -139,7 +133,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ success: true, deleted: deletedRestaurant });
   } catch (error) {
-    console.error(error);
+    console.error('[DELETE /api/restaurants/[id]]', error);
     return NextResponse.json({ error: 'Failed to delete restaurant' }, { status: 500 });
   }
 }
