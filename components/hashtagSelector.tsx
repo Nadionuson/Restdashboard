@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
 import { Hashtag } from '@/app/types/restaurant';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Badge } from './ui/badge';
+import { Hash, Plus, X } from 'lucide-react';
 
 interface HashtagSelectorProps {
   availableHashtags: Hashtag[];
@@ -42,64 +46,107 @@ const HashtagSelector: React.FC<HashtagSelectorProps> = ({
     };
 
     onSelectHashtag(hashtag);
-    setSelectedHashtag(selectedName);
+    setSelectedHashtag('');
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddHashtag();
+    }
+  };
+
+  // Filter out already selected hashtags from available options
+  const availableOptions = availableHashtags.filter(
+    hashtag => !selectedHashtags.some(selected => selected.name === hashtag.name)
+  );
+
   return (
-    <div>
-      {/* Select Hashtags Dropdown */}
-      <div>
-        <label htmlFor="hashtag" className="block text-sm font-medium text-gray-700">
-          Select Hashtags
+    <div className="space-y-4">
+      {/* Select Existing Hashtags */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-muted-foreground">
+          Select from existing hashtags:
         </label>
-        <div className="space-y-2">
-          <select
-            id="hashtag"
-            className="w-full p-2 border border-gray-300 rounded"
-            onChange={handleSelectHashtag}
-            value={selectedHashtag}
-          >
-            <option value="" disabled>Select a hashtag</option>
-            {availableHashtags.map((hashtag) => (
-              <option key={hashtag.id} value={hashtag.name}>
-                #{hashtag.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        <select
+          className="input-modern"
+          onChange={handleSelectHashtag}
+          value={selectedHashtag}
+        >
+          <option value="">Choose a hashtag...</option>
+          {availableOptions.map((hashtag) => (
+            <option key={hashtag.id} value={hashtag.name}>
+              #{hashtag.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Add New Hashtag */}
-      <div className="mt-4">
-        <label htmlFor="newHashtag" className="block text-sm font-medium text-gray-700">
-          Add New Hashtag
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-muted-foreground">
+          Create new hashtag:
         </label>
         <div className="flex space-x-2">
-          <input
-            id="newHashtag"
+          <Input
             type="text"
             value={newHashtagName}
             onChange={(e) => setNewHashtagName(e.target.value)}
-            className="border p-2 rounded"
-            placeholder="e.g. sangria"
+            onKeyPress={handleKeyPress}
+            placeholder="e.g. sangria, italian, romantic"
+            className="flex-1"
           />
-          <button
+          <Button
             type="button"
             onClick={handleAddHashtag}
-            className="bg-blue-500 text-white p-2 rounded"
+            disabled={!newHashtagName.trim() || selectedHashtags.some(h => h.name === newHashtagName.trim().replace(/^#/, ''))}
+            size="sm"
+            className="btn-modern"
           >
-            Add
-          </button>
+            <Plus className="w-4 h-4" />
+          </Button>
         </div>
-        <p className="text-xs text-gray-500 mt-1">
-          Don’t include the <span className="font-mono">#</span> — we’ll add it for you.
-        </p>
+        
         {newHashtagName.trim() && (
-          <p className="text-sm text-gray-700 mt-1">
-            Preview: <span className="font-mono text-blue-600">#{newHashtagName.trim().replace(/^#/, '')}</span>
-          </p>
+          <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+            <span>Preview:</span>
+            <Badge variant="outline" size="sm">
+              #{newHashtagName.trim().replace(/^#/, '')}
+            </Badge>
+          </div>
         )}
+        
+        <p className="text-xs text-muted-foreground">
+          Don't include the # — we'll add it automatically.
+        </p>
       </div>
+
+      {/* Available Hashtags Quick Add */}
+      {availableOptions.length > 0 && (
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground">
+            Quick add:
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {availableOptions.slice(0, 8).map((hashtag) => (
+              <Badge
+                key={hashtag.id}
+                variant="outline"
+                size="sm"
+                className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                onClick={() => onSelectHashtag(hashtag)}
+              >
+                #{hashtag.name}
+              </Badge>
+            ))}
+            {availableOptions.length > 8 && (
+              <Badge variant="outline" size="sm" className="text-muted-foreground">
+                +{availableOptions.length - 8} more
+              </Badge>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -3,6 +3,18 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { 
+  Plus, 
+  Filter, 
+  Search, 
+  Grid3X3, 
+  Star, 
+  MapPin, 
+  Calendar,
+  User,
+  Settings,
+  LogOut
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import LogoutButton from '@/components/ui/logoutButton';
@@ -11,6 +23,7 @@ import { useRestaurants } from '@/app/hooks/useRestaurant';
 import { Restaurant } from '@/app/types/restaurant';
 import { DashboardFilters } from '@/components/DashboardFilters';
 import { RestaurantModal } from '@/components/DashboardModal';
+import { Loading } from '@/components/ui/loading';
 
 export default function Dashboard() {
   const { restaurants, refetch } = useRestaurants();
@@ -24,7 +37,8 @@ export default function Dashboard() {
   const [hashtagFilter, setHashtagFilter] = useState('');
 
   const [showMineOnly, setShowMineOnly] = useState(true);
-  const [justFriends, setJustFriends] = useState(false); // placeholder for future logic
+  const [justFriends, setJustFriends] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -109,73 +123,210 @@ export default function Dashboard() {
   };
 
   if (status === 'loading') {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loading size="lg" text="Loading your dashboard..." />
+      </div>
+    );
   }
 
   return (
-    <div className="p-4 max-w-5xl mx-auto space-y-6">
-      <div>
-        <h1>
-          Welcome, {session?.user.username} 👋 {session?.user && <LogoutButton />}
-        </h1>
-      </div>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                  <Grid3X3 className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <h1 className="text-xl font-semibold">Restaurant Hub</h1>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <User className="w-4 h-4" />
+                <span>{session?.user.username}</span>
+              </div>
+              <LogoutButton />
+            </div>
+          </div>
+        </div>
+      </header>
 
-      <h1 className="text-3xl font-bold">🍽️ Restaurant Dashboard</h1>
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight mb-2">
+                Welcome back, {session?.user.username} 👋
+              </h2>
+              <p className="text-muted-foreground">
+                Manage your restaurant collection and discover new places
+              </p>
+            </div>
+            
+            <Button 
+              onClick={() => { setEditing(null); setShowModal(true); }}
+              className="btn-modern bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Restaurant
+            </Button>
+          </div>
+        </div>
 
-      {/* ✅ Checkboxes for filters */}
-      <div className="flex items-center gap-4 mt-4">
-        <label className="flex items-center gap-2 text-lightText">
-          <input
-            type="checkbox"
-            checked={showMineOnly}
-            onChange={() => setShowMineOnly((prev) => !prev)}
-            className="accent-primary"
-          />
-          My Restaurants
-        </label>
-        <label className="flex items-center gap-2 text-lightText">
-          <input
-            type="checkbox"
-            checked={justFriends}
-            onChange={() => setJustFriends((prev) => !prev)}
-            className="accent-primary"
-          />
-          Just Friends
-        </label>
-      </div>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="card-modern p-6">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Grid3X3 className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Restaurants</p>
+                <p className="text-2xl font-bold">{filteredRestaurants.length}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="card-modern p-6">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <Star className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Average Rating</p>
+                <p className="text-2xl font-bold">
+                  {filteredRestaurants.length > 0 
+                    ? (filteredRestaurants.reduce((acc, r) => acc + (r.evaluation.finalEvaluation || 0), 0) / filteredRestaurants.length).toFixed(1)
+                    : '0.0'
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="card-modern p-6">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <MapPin className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Locations</p>
+                <p className="text-2xl font-bold">{new Set(filteredRestaurants.map(r => r.location)).size}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="card-modern p-6">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-orange-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">This Month</p>
+                <p className="text-2xl font-bold">
+                  {filteredRestaurants.filter(r => {
+                    const date = new Date(r.updatedAt);
+                    const now = new Date();
+                    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+                  }).length}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      <DashboardFilters
-        locations={locations}
-        locationFilter={locationFilter}
-        setLocationFilter={setLocationFilter}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        finalEvaluationFilter={finalEvaluationFilter}
-        setFinalEvaluationFilter={setFinalEvaluationFilter}
-        nameSearchFilter={nameSearchFilter}
-        setNameSearchFilter={setNameSearchFilter}
-        hashtagFilter={hashtagFilter}
-        setHashtagFilter={setHashtagFilter}
-      />
+        {/* Filters Section */}
+        <div className="card-modern p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <Filter className="w-5 h-5 text-muted-foreground" />
+              <h3 className="text-lg font-semibold">Filters & Search</h3>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="btn-modern"
+            >
+              {showFilters ? 'Hide' : 'Show'} Filters
+            </Button>
+          </div>
 
-      <Button variant="default" onClick={() => { setEditing(null); setShowModal(true); }}>
-        Add New Restaurant
-      </Button>
+          {/* Quick Filters */}
+          <div className="flex items-center space-x-4 mb-4">
+            <label className="flex items-center space-x-2 text-sm">
+              <input
+                type="checkbox"
+                checked={showMineOnly}
+                onChange={() => setShowMineOnly((prev) => !prev)}
+                className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
+              />
+              <span>My Restaurants</span>
+            </label>
+            <label className="flex items-center space-x-2 text-sm">
+              <input
+                type="checkbox"
+                checked={justFriends}
+                onChange={() => setJustFriends((prev) => !prev)}
+                className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
+              />
+              <span>Friends Only</span>
+            </label>
+          </div>
 
-      <RestaurantList
-        restaurants={filteredRestaurants}
-        currentUserId={currentUserId}
-        handleDelete={handleDelete}
-        setShowModal={setShowModal}
-        setEditing={setEditing}
-      />
+          {/* Search Bar */}
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={nameSearchFilter}
+              onChange={(e) => setNameSearchFilter(e.target.value)}
+              className="input-modern pl-10"
+              placeholder="Search restaurants by name..."
+            />
+          </div>
 
-      <RestaurantModal
-        showModal={showModal}
-        setShowModal={setShowModal}
-        editing={editing}
-        onSubmit={handleSave}
-      />
+          {showFilters && (
+            <DashboardFilters
+              locations={locations}
+              locationFilter={locationFilter}
+              setLocationFilter={setLocationFilter}
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+              finalEvaluationFilter={finalEvaluationFilter}
+              setFinalEvaluationFilter={setFinalEvaluationFilter}
+              nameSearchFilter={nameSearchFilter}
+              setNameSearchFilter={setNameSearchFilter}
+              hashtagFilter={hashtagFilter}
+              setHashtagFilter={setHashtagFilter}
+            />
+          )}
+        </div>
+
+        {/* Restaurant List */}
+        <RestaurantList
+          restaurants={filteredRestaurants}
+          currentUserId={currentUserId}
+          handleDelete={handleDelete}
+          setShowModal={setShowModal}
+          setEditing={setEditing}
+        />
+
+        {/* Modal */}
+        <RestaurantModal
+          showModal={showModal}
+          setShowModal={setShowModal}
+          editing={editing}
+          onSubmit={handleSave}
+        />
+      </main>
     </div>
   );
 }
