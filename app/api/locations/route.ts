@@ -8,14 +8,14 @@ const prisma = new PrismaClient()
 export async function GET() {
   try {
     const locations = await prisma.restaurant.findMany({
-      distinct: ['location'],
+      distinct: ['city'],
       select: {
         location: true,
       },
     })
 
     // Extract and return only the unique locations
-    const locationList = locations.map((restaurant) => restaurant.location);
+    const locationList = locations.map((restaurant) => restaurant.city);
     return NextResponse.json(locationList);
   } catch (error) {
     console.error('Failed to fetch locations:', error);

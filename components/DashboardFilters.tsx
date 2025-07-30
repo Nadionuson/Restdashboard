@@ -10,9 +10,9 @@ interface DashboardFiltersProps {
   cities: string[];
   cityFilter: string;
   setCityFilter: (value: string) => void;
-  detailedLocations: string[];
-  detailedLocationFilter: string;
-  setDetailedLocationFilter: (value: string) => void;
+  neighborhoods: string[];
+  neighborhoodFilter: string;
+  setneighborhoodFilter: (value: string) => void;
   statusFilter: string;
   setStatusFilter: (value: string) => void;
   finalEvaluationFilter: string;
@@ -27,9 +27,9 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
   cities,
   cityFilter,
   setCityFilter,
-  detailedLocations,
-  detailedLocationFilter,
-  setDetailedLocationFilter,
+  neighborhoods,
+  neighborhoodFilter,
+  setneighborhoodFilter,
   statusFilter,
   setStatusFilter,
   finalEvaluationFilter,
@@ -58,13 +58,13 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
 
   const clearAllFilters = () => {
     setCityFilter('');
-    setDetailedLocationFilter('');
+    setneighborhoodFilter('');
     setStatusFilter('');
     setFinalEvaluationFilter('');
     setHashtagFilter('');
   };
 
-  const hasActiveFilters = cityFilter || detailedLocationFilter || statusFilter || finalEvaluationFilter || hashtagFilter;
+  const hasActiveFilters = cityFilter || neighborhoodFilter || statusFilter || finalEvaluationFilter || hashtagFilter;
 
   return (
     <div className="space-y-6">
@@ -82,7 +82,7 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
             className="input-modern"
           >
             <option value="">All Cities</option>
-            {cities.map((city) => (
+            {cities?.map((city) => (
               <option key={city} value={city}>
                 {city}
               </option>
@@ -90,25 +90,25 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
           </select>
         </div>
 
-        {/* Detailed Location Filter */}
-        <div className="space-y-2">
-          <label className="flex items-center space-x-2 text-sm font-medium">
-            <MapPin className="w-4 h-4 text-muted-foreground" />
-            <span>Detailed Location</span>
-          </label>
-          <select
-            value={detailedLocationFilter}
-            onChange={(e) => setDetailedLocationFilter(e.target.value)}
-            className="input-modern"
-          >
-            <option value="">All Locations</option>
-            {detailedLocations.map((location) => (
-              <option key={location} value={location}>
-                {location}
-              </option>
-            ))}
-          </select>
-        </div>
+                 {/* Neighborhood Filter */}
+         <div className="space-y-2">
+           <label className="flex items-center space-x-2 text-sm font-medium">
+             <MapPin className="w-4 h-4 text-muted-foreground" />
+             <span>Neighborhood</span>
+           </label>
+           <select
+             value={neighborhoodFilter}
+             onChange={(e) => setneighborhoodFilter(e.target.value)}
+             className="input-modern"
+           >
+             <option value="">All Neighborhoods</option>
+             {neighborhoods?.map((location) => (
+               <option key={location} value={location}>
+                 {location}
+               </option>
+             ))}
+           </select>
+         </div>
 
         {/* Status Filter */}
         <div className="space-y-2">
@@ -160,10 +160,10 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
                   {cityFilter}
                 </Badge>
               )}
-              {detailedLocationFilter && (
+              {neighborhoodFilter && (
                 <Badge variant="default" size="sm">
                   <MapPin className="w-3 h-3 mr-1" />
-                  {detailedLocationFilter}
+                  {neighborhoodFilter}
                 </Badge>
               )}
               {statusFilter && (

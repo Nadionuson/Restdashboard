@@ -27,7 +27,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
   const [id] = useState(initialData?.id ?? 0);
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
-  const [detailedLocation, setDetailedLocation] = useState('');
+  const [neighborhood, setneighborhood] = useState('');
   const [status, setStatus] = useState<RestaurantStatus>('Want to go');
   const [createdAt, setCreatedAt] = useState<string | Date>('');
   const [updatedAt, setUpdatedAt] = useState<string | Date>('');
@@ -71,7 +71,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
     if (initialData) {
       setName(initialData.name);
       setCity(initialData.city || '');
-      setDetailedLocation(initialData.detailedLocation || '');
+      setneighborhood(initialData.neighborhood || '');
       setStatus(initialData.status);
       setHighlights(initialData.highlights || '');
       setEvaluation(initialData.evaluation);
@@ -98,11 +98,15 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Default neighborhood to city if it's empty
+    const finalneighborhood = neighborhood.trim() || city;
+    
     const newRestaurant: Restaurant = {
       id,
       name,
       city,
-      detailedLocation,
+      neighborhood: finalneighborhood,
       status,
       highlights,
       evaluation,
@@ -154,11 +158,11 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
         <div className="space-y-2">
           <label className="flex items-center space-x-2 text-sm font-medium">
             <MapPin className="w-4 h-4 text-muted-foreground" />
-            <span>Detailed Location</span>
+            <span>Neighborhood</span>
           </label>
           <Input 
-            value={detailedLocation} 
-            onChange={(e) => setDetailedLocation(e.target.value)} 
+            value={neighborhood} 
+            onChange={(e) => setneighborhood(e.target.value)} 
             placeholder="Optional - neighborhood, street, etc."
           />
         </div>

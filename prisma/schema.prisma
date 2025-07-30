@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "./node_modules/.prisma/client"
 }
 
 datasource db {
@@ -16,11 +17,10 @@ enum PrivacyLevel {
 model Restaurant {
   id              Int         @id @default(autoincrement())
   name            String
-  city             String     @map("location")
-  detailedLocation String?
+  city            String     
+  neighborhood    String?
   status          String
-  highlights      String?
-						  
+  highlights      String?				  
   evaluation      Evaluation?
   hashtags        Hashtag[]   @relation("RestaurantHashtags")
   createdAt       DateTime    @default(now())

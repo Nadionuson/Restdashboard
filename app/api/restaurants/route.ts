@@ -61,7 +61,7 @@
       const {
         name,
         city,
-        detailedLocation,
+        neighborhood,
         status,
         highlights,
         evaluation,
@@ -74,7 +74,7 @@
         data: {
           name: data.name,
           city: data.city,
-          detailedLocation: data.detailedLocation || data.city,
+          neighborhood: data.neighborhood || data.city,
           status: data.status,
           highlights: data.highlights,
           ownerId: user.id,

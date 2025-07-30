@@ -29,8 +29,10 @@ export default function Dashboard() {
   const { restaurants, refetch } = useRestaurants();
   const [editing, setEditing] = useState<Restaurant | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [locations, setLocations] = useState<string[]>([]);
-  const [locationFilter, setLocationFilter] = useState('');
+  const [cities, setCities] = useState<string[]>([]);
+  const [cityFilter, setCityFilter] = useState('');
+  const [neighborhoods, setneighborhoods] = useState<string[]>([]);
+  const [neighborhoodFilter, setneighborhoodFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [finalEvaluationFilter, setFinalEvaluationFilter] = useState('');
   const [nameSearchFilter, setNameSearchFilter] = useState('');
@@ -55,7 +57,26 @@ export default function Dashboard() {
       try {
         const res = await fetch('/api/locations');
         const data = await res.json();
-        setLocations(data);
+
+        console.log('Fetched locations:', data);
+
+         // Case 1: if API returns object { cities: string[], neighborhoods: string[] }
+    if (Array.isArray(data.cities) && Array.isArray(data.neighborhoods)) {
+      setCities(data.cities);
+      setneighborhoods(data.neighborhoods);
+    }
+
+    // Case 2: fallback if it returns a single array
+    else if (Array.isArray(data)) {
+      setCities(data);
+      setneighborhoods(data);
+    }
+
+        // Error fallback
+    else {
+      throw new Error('Unexpected data format in /api/locations');
+    }
+        
       } catch (error) {
         console.error('Failed to fetch locations', error);
         router.push('/error');
@@ -64,9 +85,29 @@ export default function Dashboard() {
     fetchLocations();
   }, []);
 
+  // Update detailed locations based on selected city filter
+  useEffect(() => {
+    if (cityFilter) {
+      // Filter restaurants by selected city and get unique detailed locations
+      const cityRestaurants = restaurants.filter(r => r.city === cityFilter);
+      const uniqueneighborhoods = [...new Set(cityRestaurants.map(r => r.neighborhood))].filter((location): location is string => Boolean(location));
+      setneighborhoods(uniqueneighborhoods);
+      
+      // Clear detailed location filter if the current value is not available for the selected city
+      if (neighborhoodFilter && !uniqueneighborhoods.includes(neighborhoodFilter)) {
+        setneighborhoodFilter('');
+      }
+    } else {
+      // If no city is selected, show all unique detailed locations from all restaurants
+      const allneighborhoods = [...new Set(restaurants.map(r => r.neighborhood))].filter((location): location is string => Boolean(location));
+      setneighborhoods(allneighborhoods);
+    }
+  }, [cityFilter, restaurants, neighborhoodFilter]);
+
   const filteredRestaurants = restaurants.filter((r) => {
     const matchesMine = showMineOnly ? r.owner?.id === currentUserId : true;
-    const matchesLocation = locationFilter ? r.location === locationFilter : true;
+    const matchesCity = cityFilter ? r.city === cityFilter : true;
+    const matchesneighborhood = neighborhoodFilter ? r.neighborhood === neighborhoodFilter : true;
     const matchesStatus = statusFilter ? r.status === statusFilter : true;
     const matchesFinalEvaluation = finalEvaluationFilter
       ? r.evaluation.finalEvaluation >= Number(finalEvaluationFilter)
@@ -80,7 +121,8 @@ export default function Dashboard() {
 
     return (
       matchesMine &&
-      matchesLocation &&
+      matchesCity &&
+      matchesneighborhood &&
       matchesStatus &&
       matchesFinalEvaluation &&
       matchesName &&
@@ -217,8 +259,8 @@ export default function Dashboard() {
                 <MapPin className="w-5 h-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Locations</p>
-                <p className="text-2xl font-bold">{new Set(filteredRestaurants.map(r => r.location)).size}</p>
+                <p className="text-sm font-medium text-muted-foreground">Cities</p>
+                <p className="text-2xl font-bold">{new Set(filteredRestaurants.map(r => r.city)).size}</p>
               </div>
             </div>
           </div>
@@ -295,9 +337,12 @@ export default function Dashboard() {
 
           {showFilters && (
             <DashboardFilters
-              locations={locations}
-              locationFilter={locationFilter}
-              setLocationFilter={setLocationFilter}
+              cities={cities}
+              cityFilter={cityFilter}
+              setCityFilter={setCityFilter}
+              neighborhoods={neighborhoods}
+              neighborhoodFilter={neighborhoodFilter}
+              setneighborhoodFilter={setneighborhoodFilter}
               statusFilter={statusFilter}
               setStatusFilter={setStatusFilter}
               finalEvaluationFilter={finalEvaluationFilter}

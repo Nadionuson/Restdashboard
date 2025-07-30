@@ -34,12 +34,7 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({
   setShowModal,
   setEditing,
 }) => {
-  const [sortMode, setSortMode] = useState<'random' | 'rating' | 'name'>('random');
-  const [shuffledRestaurants, setShuffledRestaurants] = useState<Restaurant[]>([]);
-
-  useEffect(() => {
-    setShuffledRestaurants([...restaurants].sort(() => Math.random() - 0.5));
-  }, [restaurants]);
+  const [sortMode, setSortMode] = useState<'rating' | 'name'>('rating');
 
   const sortedRestaurants = React.useMemo(() => {
     if (sortMode === 'rating') {
@@ -53,8 +48,8 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({
       );
     }
     
-    return shuffledRestaurants;
-  }, [sortMode, restaurants, shuffledRestaurants]);
+    return restaurants;
+  }, [sortMode, restaurants]);
 
   const getRatingVariant = (rating: number) => {
     if (rating >= 4) return 'success';
@@ -90,10 +85,9 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({
           <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
           <select
             value={sortMode}
-            onChange={(e) => setSortMode(e.target.value as 'random' | 'rating' | 'name')}
+            onChange={(e) => setSortMode(e.target.value as 'rating' | 'name')}
             className="input-modern text-sm w-32"
           >
-            <option value="random">Random</option>
             <option value="rating">Rating</option>
             <option value="name">Name</option>
           </select>
@@ -128,7 +122,10 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({
                     <h3 className="text-lg font-semibold truncate mb-1">{r.name}</h3>
                     <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                       <MapPin className="w-4 h-4" />
-                      <span className="truncate">{r.location}</span>
+                      <span className="truncate">{r.city}</span>
+                      {r.neighborhood && r.neighborhood !== r.city && (
+                        <span className="text-xs text-muted-foreground">• {r.neighborhood}</span>
+                      )}
                     </div>
                   </div>
                   

@@ -24,7 +24,7 @@ export type Restaurant = {
   id: number;
   name: string;
   city: string;
-  detailedLocation?: string;
+  neighborhood?: string;
   status: RestaurantStatus;
   evaluation: Evaluation;
   highlights: string;

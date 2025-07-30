@@ -3,9 +3,9 @@ interface FiltersProps {
   city: string[];
   cityFilter: string;
   setcityFilter: (value: string) => void;
-  detailedLocations: string[];               // NEW
-  detailedLocationFilter: string;            // NEW
-  setDetailedLocationFilter: (value: string) => void; // NEW
+  neighborhoods: string[];               // NEW
+  neighborhoodFilter: string;            // NEW
+  setneighborhoodFilter: (value: string) => void; // NEW
   statusFilter: string;
   setStatusFilter: (value: string) => void;
   finalEvaluationFilter: string;
@@ -19,9 +19,9 @@ export const Filters = ({
   city,
   cityFilter,
   setcityFilter,
-  detailedLocations,
-  detailedLocationFilter,
-  setDetailedLocationFilter,
+  neighborhoods,
+  neighborhoodFilter,
+  setneighborhoodFilter,
   statusFilter,
   setStatusFilter,
   finalEvaluationFilter,
@@ -34,7 +34,7 @@ export const Filters = ({
     <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-4">
       <div>
         <label htmlFor="location-filter" className="block mb-1 font-medium text-gray-700">
-          Filter by Location
+          Filter by City
         </label>
         <select
           id="location-filter"
@@ -52,16 +52,16 @@ export const Filters = ({
       </div>
       <div>
         <label htmlFor="detailed-location-filter" className="block mb-1 font-medium text-gray-700">
-          Filter by Detailed Location
+          Filter by Neighborhood
         </label>
         <select
           id="detailed-location-filter"
-          value={detailedLocationFilter}
-          onChange={(e) => setDetailedLocationFilter(e.target.value)}
+          value={neighborhoodFilter}
+          onChange={(e) => setneighborhoodFilter(e.target.value)}
           className="w-full p-2 border border-gray-300 rounded"
         >
-          <option value="">All Detailed Locations</option>
-          {detailedLocations.map((dloc) => (
+          <option value="">All Neighborhoods</option>
+          {neighborhoods.map((dloc) => (
             <option key={dloc} value={dloc}>
               {dloc}
             </option>
