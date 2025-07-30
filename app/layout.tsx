@@ -1,48 +1,26 @@
-// app/layout.tsx (client-side layout for handling global errors, fonts, and session)
-'use client';
-
-import { Geist, Geist_Mono } from "next/font/google";
-import { ReactNode, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import SessionWrapper from "./SessionWrapper";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
+import SessionWrapper from "./SessionWrapper";
 
-// Fonts
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const inter = Inter({ 
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
 
-export default function RootLayout({ children }: { children: ReactNode }) {
-  const router = useRouter();
+export const metadata: Metadata = {
+  title: "Restaurant Hub - Modern Restaurant Dashboard",
+  description: "A modern, minimalist restaurant management dashboard",
+};
 
-  useEffect(() => {
-    const handleError = (event: ErrorEvent) => {
-      console.error('Global error caught:', {
-        message: event.message,
-        source: event.filename,
-        lineno: event.lineno,
-        colno: event.colno,
-        error: event.error,
-      });
-      router.push('/error');
-    };
-  
-    const handleRejection = (event: PromiseRejectionEvent) => {
-      console.error('Unhandled promise rejection:', event.reason);
-      router.push('/error');
-    };
-  
-    window.addEventListener('error', handleError);
-    window.addEventListener('unhandledrejection', handleRejection);
-  
-    return () => {
-      window.removeEventListener('error', handleError);
-      window.removeEventListener('unhandledrejection', handleRejection);
-    };
-  }, [router]);
-
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="en" className="h-full">
+      <body className={`${inter.variable} font-sans antialiased h-full bg-background text-foreground`}>
         <SessionWrapper>{children}</SessionWrapper>
       </body>
     </html>
