@@ -66,6 +66,9 @@
         highlights,
         evaluation,
         hashtags,
+        address,
+        phoneNumber,
+        openingHours,
       } = data;
 
       console.log("Creating new restaurant:", data);
@@ -77,6 +80,9 @@
           neighborhood: data.neighborhood || data.city,  // Handle optional neighborhood
           status: data.status,
           highlights: data.highlights,
+          address: data.address,
+          phoneNumber: data.phoneNumber,
+          openingHours: data.openingHours,
           ownerId: user.id,
           privacyLevel: data.private ?? "PUBLIC",
           hashtags: {

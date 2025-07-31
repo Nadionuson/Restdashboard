@@ -28,6 +28,9 @@ export type Restaurant = {
   status: RestaurantStatus;
   evaluation: Evaluation;
   highlights: string;
+  address: string;
+  phoneNumber: string;
+  openingHours: string;
   hashtags?: Hashtag[];
   isPrivate: boolean;
   owner?: User;  // Include user info

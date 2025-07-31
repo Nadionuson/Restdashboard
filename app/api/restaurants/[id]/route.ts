@@ -73,6 +73,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         status: data.status,
         highlights: data.highlights,
         privacyLevel: data.privacyLevel,
+        address: data.address ?? null,
+        phoneNumber: data.phoneNumber ?? null,
+        openingHours: data.openingHours ?? null,
         evaluation: {
           update: {
             locationRating: data.evaluation.locationRating,

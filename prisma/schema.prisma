@@ -19,7 +19,10 @@ model Restaurant {
   city            String     
   neighborhood    String?
   status          String
-  highlights      String?				  
+  highlights      String?	
+  address         String?     
+  phoneNumber     String?     
+  openingHours    String?     			  
   evaluation      Evaluation?
   hashtags        Hashtag[]   @relation("RestaurantHashtags")
   createdAt       DateTime    @default(now())
