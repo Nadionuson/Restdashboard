@@ -1,19 +1,11 @@
+'use client';
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Restaurant, Evaluation, getFinalEvaluation, RestaurantStatus, Hashtag } from '../app/types/restaurant';
 import StarRating from './ui/starRating';
 import HashtagSelector from './hashtagSelector';
-import {
-  MapPin,
-  Building2,
-  Star,
-  Hash,
-  Eye,
-  Save,
-  X,
-  Plus
-} from 'lucide-react';
+import { MapPin, Building2, Star, Hash, Eye, Save, X, Plus } from 'lucide-react';
 import { Badge } from './ui/badge';
 import router from 'next/router';
 
@@ -43,11 +35,13 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
   const [selectedHashtags, setSelectedHashtags] = useState<Hashtag[]>([]);
   const [availableHashtags, setAvailableHashtags] = useState<Hashtag[]>([]);
 
-  // New AI-derived fields
   const [address, setAddress] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [openingHours, setOpeningHours] = useState('');
   const [loadingDetails, setLoadingDetails] = useState(false);
+
+  const [routeInfo, setRouteInfo] = useState<string | null>(null);
+  const [loadingRoute, setLoadingRoute] = useState(false);
 
   useEffect(() => {
     const fetchHashtags = async () => {
@@ -143,6 +137,65 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
     }
   };
 
+  const handleRouteCheck = async () => {
+    if (!city || !neighborhood) {
+      alert('Missing destination info');
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      alert('Geolocation not supported by your browser');
+      return;
+    }
+
+    setLoadingRoute(true);
+    setRouteInfo(null);
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      const from = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      };
+
+      try {
+        const geocodeRes = await fetch(
+          `https://nominatim.openstreetmap.org/search?street=${encodeURIComponent(neighborhood)}&city=${encodeURIComponent(city)}&format=json&limit=1`
+        );
+        const geoData = await geocodeRes.json();
+
+        if (!geoData?.[0]) {
+          setRouteInfo('Destination address not found');
+          setLoadingRoute(false);
+          return;
+        }
+
+        const to = {
+          lat: parseFloat(geoData[0].lat),
+          lng: parseFloat(geoData[0].lon),
+        };
+
+        const res = await fetch('/api/route', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ from, to, mode: 'foot-walking' }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          setRouteInfo(`~${data.distanceKm} km, ~${data.durationMin} min (walking)`);
+        } else {
+          setRouteInfo('Failed to calculate route');
+        }
+      } catch (err) {
+        console.error(err);
+        setRouteInfo('Something went wrong.');
+      } finally {
+        setLoadingRoute(false);
+      }
+    });
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Basic Info */}
@@ -169,7 +222,6 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
           <label htmlFor="isPrivate">Private</label>
         </div>
 
-        {/* AI Fields */}
         <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Address" />
         <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Phone Number" />
         <Input value={openingHours} onChange={(e) => setOpeningHours(e.target.value)} placeholder="Opening Hours" />
@@ -196,14 +248,12 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       )}
 
       {/* Hashtags */}
-      <div className="space-y-2">
-        <HashtagSelector
-          availableHashtags={availableHashtags}
-          selectedHashtags={selectedHashtags}
-          onSelectHashtag={(tag) => setSelectedHashtags((prev) => [...prev, tag])}
-          onRemoveHashtag={(tag) => setSelectedHashtags((prev) => prev.filter(h => h.id !== tag.id))}
-        />
-      </div>
+      <HashtagSelector
+        availableHashtags={availableHashtags}
+        selectedHashtags={selectedHashtags}
+        onSelectHashtag={(tag) => setSelectedHashtags((prev) => [...prev, tag])}
+        onRemoveHashtag={(tag) => setSelectedHashtags((prev) => prev.filter(h => h.id !== tag.id))}
+      />
 
       {/* Highlights */}
       <textarea
@@ -212,6 +262,24 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
         placeholder="Notes, highlights..."
         className="input-modern w-full min-h-[100px]"
       />
+
+      {/* If I Leave Now */}
+      <div className="space-y-2 pt-4 border-t border-border">
+        <label className="text-sm font-medium">If you leave now</label>
+        <div className="flex gap-4 items-start">
+          <Button
+            type="button"
+            onClick={handleRouteCheck}
+            disabled={loadingRoute}
+            className="btn-modern bg-muted text-muted-foreground"
+          >
+            {loadingRoute ? 'Checking...' : 'If I Leave Now'}
+          </Button>
+          <div className="text-sm text-muted-foreground mt-1">
+            {routeInfo || '—'}
+          </div>
+        </div>
+      </div>
 
       {/* Submit */}
       <div className="flex justify-end pt-4 border-t border-border">
