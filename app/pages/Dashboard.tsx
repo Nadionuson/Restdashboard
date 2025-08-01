@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { 
   Plus, 
@@ -190,7 +191,9 @@ export default function Dashboard() {
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <User className="w-4 h-4" />
-                <span>{session?.user.username}</span>
+                <Link href="/account" className="text-sm text-muted-foreground hover:underline">
+  {session?.user?.username}
+</Link>
               </div>
               <LogoutButton />
             </div>
