@@ -7,6 +7,7 @@ import StarRating from './ui/starRating';
 import HashtagSelector from './hashtagSelector';
 import { Building2, Save, ChevronDown, ChevronRight } from 'lucide-react';
 import router from 'next/router';
+import { StarBar } from './ui/starbar';
 
 interface RestaurantFormProps {
   initialData: Restaurant | null;
@@ -225,14 +226,20 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
 
       {/* Additional Info */}
 <div className="border rounded-lg">
-  <button
-    type="button"
-    className="w-full px-4 py-2 flex items-center justify-between text-left text-sm font-medium bg-muted text-muted-foreground"
-    onClick={() => setShowDetails((prev) => !prev)}
-  >
+ <button
+  type="button"
+  className="w-full px-4 py-2 flex items-center justify-between text-left text-sm font-medium bg-muted text-muted-foreground"
+  onClick={() => setShowDetails((prev) => !prev)}
+>
+  <div className="flex items-center gap-2">
     <span>Additional Info</span>
-    {showDetails ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-  </button>
+    {address
+      ? <span className="text-green-600">👍</span>
+      : <span className="text-gray-600">⛔ Awaiting for AI</span>}
+  </div>
+  {showDetails ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+</button>
+
 
   {showDetails && (
     <div className="p-4 space-y-4 bg-muted/40">
@@ -281,7 +288,12 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       className="w-full px-4 py-2 flex items-center justify-between text-left text-sm font-medium bg-muted text-muted-foreground"
       onClick={() => setShowRatings((prev) => !prev)}
     >
-      <span>Ratings</span>
+      <span className="flex items-center gap-2">
+        Ratings
+        <span className="flex items-center text-yellow-500">
+         <StarBar rating={evaluation.finalEvaluation} /> ({evaluation.finalEvaluation.toFixed(1)})
+        </span>
+      </span>
       {showRatings ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
     </button>
 
@@ -297,6 +309,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
   </div>
 )}
 
+
 {/* Tell Me More */}
 <div className="border rounded-lg">
   <button
@@ -304,7 +317,21 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
     className="w-full px-4 py-2 flex items-center justify-between text-left text-sm font-medium bg-muted text-muted-foreground"
     onClick={() => setShowMore((prev) => !prev)}
   >
-    <span>Tell me more</span>
+    <div className="flex items-center gap-2">
+      <span>Tell me more</span>
+      {selectedHashtags.length > 0 && (
+        <div className="flex gap-1 items-center text-xs text-muted-foreground">
+          {selectedHashtags.slice(0, 3).map((tag) => (
+            <span key={tag.id} className="bg-background border border-border rounded px-2 py-0.5">
+              #{tag.name}
+            </span>
+          ))}
+          {selectedHashtags.length > 3 && (
+            <span className="text-xs text-muted-foreground">+{selectedHashtags.length - 3}</span>
+          )}
+        </div>
+      )}
+    </div>
     {showMore ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
   </button>
 
