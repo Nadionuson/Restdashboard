@@ -5,8 +5,7 @@ import { Input } from './ui/input';
 import { Restaurant, Evaluation, getFinalEvaluation, RestaurantStatus, Hashtag } from '../app/types/restaurant';
 import StarRating from './ui/starRating';
 import HashtagSelector from './hashtagSelector';
-import { MapPin, Building2, Star, Hash, Eye, Save, X, Plus } from 'lucide-react';
-import { Badge } from './ui/badge';
+import { Building2, Save, ChevronDown, ChevronRight } from 'lucide-react';
 import router from 'next/router';
 
 interface RestaurantFormProps {
@@ -24,6 +23,9 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
   const [updatedAt, setUpdatedAt] = useState<string | Date>('');
   const [highlights, setHighlights] = useState('');
   const [isPrivate, setIsPrivate] = useState(initialData?.isPrivate ?? false);
+  const [showRatings, setShowRatings] = useState(false);
+  const [showMore, setShowMore] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [evaluation, setEvaluation] = useState<Evaluation>({
     locationRating: 0,
     serviceRating: 0,
@@ -42,6 +44,8 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
 
   const [routeInfo, setRouteInfo] = useState<string | null>(null);
   const [loadingRoute, setLoadingRoute] = useState(false);
+
+  const [showExtras, setShowExtras] = useState(false);
 
   useEffect(() => {
     const fetchHashtags = async () => {
@@ -103,7 +107,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       updatedAt,
       address,
       phoneNumber,
-      openingHours
+      openingHours,
     };
     onSubmit(newRestaurant);
   };
@@ -174,22 +178,14 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
           lng: parseFloat(geoData[0].lon),
         };
 
-        //By Foot
         const res = await fetch('/api/route', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ from, to, mode: 'driving-car' }),
         });
 
-        //By Car 
-
         const data = await res.json();
-
-        if (res.ok) {
-          setRouteInfo(`~${data.distanceKm} km, ~${data.durationMin} min (driving)`);
-        } else {
-          setRouteInfo('Failed to calculate route');
-        }
+        setRouteInfo(res.ok ? `~${data.distanceKm} km, ~${data.durationMin} min (driving)` : 'Failed to calculate route');
       } catch (err) {
         console.error(err);
         setRouteInfo('Something went wrong.');
@@ -213,61 +209,35 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
           <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" required />
         </div>
 
-        <Input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Neighborhood" />
-
-        <select value={status} onChange={(e) => setStatus(e.target.value as RestaurantStatus)} className="input-modern">
-          <option value="Want to go">Want to go</option>
-          <option value="Tried it">Tried it</option>
-        </select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Neighborhood" />
+          <select value={status} onChange={(e) => setStatus(e.target.value as RestaurantStatus)} className="input-modern">
+            <option value="Want to go">Want to go</option>
+            <option value="Tried it">Tried it</option>
+          </select>
+        </div>
 
         <div className="flex items-center gap-2">
           <input type="checkbox" id="isPrivate" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
           <label htmlFor="isPrivate">Private</label>
         </div>
-
-        <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Address" />
-        <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Phone Number" />
-        <Input value={openingHours} onChange={(e) => setOpeningHours(e.target.value)} placeholder="Opening Hours" />
-
-        <Button
-          type="button"
-          onClick={handleGetDetails}
-          disabled={loadingDetails}
-          className="bg-secondary text-secondary-foreground"
-        >
-          {loadingDetails ? 'Refreshing...' : 'Refresh Additional Info'}
-        </Button>
       </div>
 
-      {/* Ratings */}
-      {status === 'Tried it' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <StarRating label="Location" value={evaluation.locationRating} onChange={(val) => setEvaluation(prev => ({ ...prev, locationRating: val }))} />
-          <StarRating label="Service" value={evaluation.serviceRating} onChange={(val) => setEvaluation(prev => ({ ...prev, serviceRating: val }))} />
-          <StarRating label="Price/Quality" value={evaluation.priceQualityRating} onChange={(val) => setEvaluation(prev => ({ ...prev, priceQualityRating: val }))} />
-          <StarRating label="Food Quality" value={evaluation.foodQualityRating} onChange={(val) => setEvaluation(prev => ({ ...prev, foodQualityRating: val }))} />
-          <StarRating label="Atmosphere" value={evaluation.atmosphereRating} onChange={(val) => setEvaluation(prev => ({ ...prev, atmosphereRating: val }))} />
-        </div>
-      )}
+      {/* Additional Info */}
+<div className="border rounded-lg">
+  <button
+    type="button"
+    className="w-full px-4 py-2 flex items-center justify-between text-left text-sm font-medium bg-muted text-muted-foreground"
+    onClick={() => setShowDetails((prev) => !prev)}
+  >
+    <span>Additional Info</span>
+    {showDetails ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+  </button>
 
-      {/* Hashtags */}
-      <HashtagSelector
-        availableHashtags={availableHashtags}
-        selectedHashtags={selectedHashtags}
-        onSelectHashtag={(tag) => setSelectedHashtags((prev) => [...prev, tag])}
-        onRemoveHashtag={(tag) => setSelectedHashtags((prev) => prev.filter(h => h.id !== tag.id))}
-      />
-
-      {/* Highlights */}
-      <textarea
-        value={highlights}
-        onChange={(e) => setHighlights(e.target.value)}
-        placeholder="Notes, highlights..."
-        className="input-modern w-full min-h-[100px]"
-      />
-
+  {showDetails && (
+    <div className="p-4 space-y-4 bg-muted/40">
       {/* If I Leave Now */}
-      <div className="space-y-2 pt-4 border-t border-border">
+      <div className="space-y-2">
         <label className="text-sm font-medium">If you leave now</label>
         <div className="flex gap-4 items-start">
           <Button
@@ -283,6 +253,83 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
           </div>
         </div>
       </div>
+
+      {/* Address fields */}
+      <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Address" />
+      <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Phone Number" />
+      <Input value={openingHours} onChange={(e) => setOpeningHours(e.target.value)} placeholder="Opening Hours" />
+
+      <Button
+        type="button"
+        onClick={handleGetDetails}
+        disabled={loadingDetails}
+        className="bg-secondary text-secondary-foreground"
+      >
+        {loadingDetails ? 'Refreshing...' : 'Refresh Additional Info'}
+      </Button>
+    </div>
+  )}
+</div>
+
+
+
+      {/* Ratings */}
+{status === 'Tried it' && (
+  <div className="border rounded-lg">
+    <button
+      type="button"
+      className="w-full px-4 py-2 flex items-center justify-between text-left text-sm font-medium bg-muted text-muted-foreground"
+      onClick={() => setShowRatings((prev) => !prev)}
+    >
+      <span>Ratings</span>
+      {showRatings ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+    </button>
+
+    {showRatings && (
+      <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-muted/40">
+        <StarRating label="Location" value={evaluation.locationRating} onChange={(val) => setEvaluation(prev => ({ ...prev, locationRating: val }))} />
+        <StarRating label="Service" value={evaluation.serviceRating} onChange={(val) => setEvaluation(prev => ({ ...prev, serviceRating: val }))} />
+        <StarRating label="Price/Quality" value={evaluation.priceQualityRating} onChange={(val) => setEvaluation(prev => ({ ...prev, priceQualityRating: val }))} />
+        <StarRating label="Food Quality" value={evaluation.foodQualityRating} onChange={(val) => setEvaluation(prev => ({ ...prev, foodQualityRating: val }))} />
+        <StarRating label="Atmosphere" value={evaluation.atmosphereRating} onChange={(val) => setEvaluation(prev => ({ ...prev, atmosphereRating: val }))} />
+      </div>
+    )}
+  </div>
+)}
+
+{/* Tell Me More */}
+<div className="border rounded-lg">
+  <button
+    type="button"
+    className="w-full px-4 py-2 flex items-center justify-between text-left text-sm font-medium bg-muted text-muted-foreground"
+    onClick={() => setShowMore((prev) => !prev)}
+  >
+    <span>Tell me more</span>
+    {showMore ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+  </button>
+
+  {showMore && (
+    <div className="p-4 space-y-4 bg-muted/40">
+      <HashtagSelector
+        availableHashtags={availableHashtags}
+        selectedHashtags={selectedHashtags}
+        onSelectHashtag={(tag) => setSelectedHashtags((prev) => [...prev, tag])}
+        onRemoveHashtag={(tag) => setSelectedHashtags((prev) => prev.filter(h => h.id !== tag.id))}
+      />
+
+      <textarea
+        value={highlights}
+        onChange={(e) => setHighlights(e.target.value)}
+        placeholder="Notes, highlights..."
+        className="input-modern w-full min-h-[100px]"
+      />
+    </div>
+  )}
+</div>
+
+      
+
+      
 
       {/* Submit */}
       <div className="flex justify-end pt-4 border-t border-border">
