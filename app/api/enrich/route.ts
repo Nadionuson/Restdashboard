@@ -41,7 +41,7 @@ Respond ONLY in strict JSON format:
 
   try {
     const chatCompletion = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-4.1',
       temperature: 0.2,
       messages: [{ role: 'user', content: prompt }],
     });

@@ -174,16 +174,19 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
           lng: parseFloat(geoData[0].lon),
         };
 
+        //By Foot
         const res = await fetch('/api/route', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ from, to, mode: 'foot-walking' }),
+          body: JSON.stringify({ from, to, mode: 'driving-car' }),
         });
+
+        //By Car 
 
         const data = await res.json();
 
         if (res.ok) {
-          setRouteInfo(`~${data.distanceKm} km, ~${data.durationMin} min (walking)`);
+          setRouteInfo(`~${data.distanceKm} km, ~${data.durationMin} min (driving)`);
         } else {
           setRouteInfo('Failed to calculate route');
         }
