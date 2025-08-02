@@ -2,15 +2,9 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/authOptions';
-import { PrismaClient, User } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
-
-interface FriendUser {
-  id: number;
-  username: string;
-  email: string | null;
-}
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -19,7 +13,7 @@ export async function GET() {
   }
 
   try {
-    // Find current user id by email
+    // Get current user
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: { id: true },
@@ -29,13 +23,15 @@ export async function GET() {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Find accepted friendships where current user is requester or addressee
+    const userId = user.id;
+
+    // Accepted friends (bidirectional)
     const acceptedFriendships = await prisma.friend.findMany({
       where: {
         status: 'accepted',
         OR: [
-          { requesterId: user.id },
-          { addresseeId: user.id },
+          { requesterId: userId },
+          { addresseeId: userId },
         ],
       },
       select: {
@@ -44,15 +40,37 @@ export async function GET() {
       },
     });
 
-    // Map to list of friend users (the other user in each friendship)
-    const friends: FriendUser[] = acceptedFriendships.map(friendship => {
-      if (friendship.requester.id === user.id) {
-        return friendship.addressee;
-      }
-      return friendship.requester;
+    const friends = acceptedFriendships.map(f =>
+      f.requester.id === userId ? f.addressee : f.requester
+    );
+
+    // Incoming requests (someone sent to me)
+    const incomingRequests = await prisma.friend.findMany({
+      where: {
+        status: 'pending',
+        addresseeId: userId,
+      },
+      select: {
+        requester: { select: { id: true, username: true, email: true } },
+      },
     });
 
-    return NextResponse.json(friends);
+    // Sent requests (I sent to someone)
+    const sentRequests = await prisma.friend.findMany({
+      where: {
+        status: 'pending',
+        requesterId: userId,
+      },
+      select: {
+        addressee: { select: { id: true, username: true, email: true } },
+      },
+    });
+
+    return NextResponse.json({
+      friends,
+      incomingRequests: incomingRequests.map(f => f.requester),
+      sentRequests: sentRequests.map(f => f.addressee),
+    });
   } catch (error) {
     console.error('Friends list API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

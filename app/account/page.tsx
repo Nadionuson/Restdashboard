@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
 
 interface User {
   id: number;
-  name: string;
+  username: string;
   email?: string;
 }
 
@@ -22,99 +23,71 @@ export default function AccountPage() {
   const [friends, setFriends] = useState<User[]>([]);
   const [incomingRequests, setIncomingRequests] = useState<User[]>([]);
   const [sentRequests, setSentRequests] = useState<User[]>([]);
+  const [activeTab, setActiveTab] = useState('profile');
+  const [friendsError, setFriendsError] = useState('');
 
-  const [bio, setBio] = useState('');
-
-  // Search & Invite state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [sendingRequestId, setSendingRequestId] = useState<number | null>(null);
 
   const handleAcceptRequest = async (userId: number) => {
-  try {
-    const res = await fetch('/api/friends/accept', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fromUserId: userId }),
-    });
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || 'Failed to accept request');
+    try {
+      const res = await fetch('/api/friends/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fromUserId: userId }),
+      });
+      if (!res.ok) return;
+      setIncomingRequests(prev => prev.filter(u => u.id !== userId));
+      const accepted = incomingRequests.find(u => u.id === userId);
+      if (accepted) setFriends(prev => [...prev, accepted]);
+    } catch (err) {
+      console.error(err);
     }
-    // Remove from incomingRequests and add to friends
-    setIncomingRequests(prev => prev.filter(u => u.id !== userId));
-    const acceptedUser = incomingRequests.find(u => u.id === userId);
-    if (acceptedUser) {
-      setFriends(prev => [...prev, acceptedUser]);
-    }
-    alert('Friend request accepted');
-  } catch (err) {
-    console.error(err);
-    alert('Error accepting friend request');
-  }
-};
+  };
 
-const handleDeclineRequest = async (userId: number) => {
-  try {
-    const res = await fetch('/api/friends/decline', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fromUserId: userId }),
-    });
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || 'Failed to decline request');
+  const handleDeclineRequest = async (userId: number) => {
+    try {
+      const res = await fetch('/api/friends/decline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fromUserId: userId }),
+      });
+      if (!res.ok) return;
+      setIncomingRequests(prev => prev.filter(u => u.id !== userId));
+    } catch (err) {
+      console.error(err);
     }
-    // Remove from incomingRequests
-    setIncomingRequests(prev => prev.filter(u => u.id !== userId));
-    alert('Friend request declined');
-  } catch (err) {
-    console.error(err);
-    alert('Error declining friend request');
-  }
-};
+  };
 
-const handleRemoveFriend = async (userId: number) => {
-  try {
-    const res = await fetch('/api/friends/remove', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ friendUserId: userId }),
-    });
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || 'Failed to remove friend');
+  const handleRemoveFriend = async (userId: number) => {
+    try {
+      const res = await fetch('/api/friends/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ friendUserId: userId }),
+      });
+      if (!res.ok) return;
+      setFriends(prev => prev.filter(u => u.id !== userId));
+    } catch (err) {
+      console.error(err);
     }
-    // Remove from friends list
-    setFriends(prev => prev.filter(u => u.id !== userId));
-    alert('Friend removed');
-  } catch (err) {
-    console.error(err);
-    alert('Error removing friend');
-  }
-};
+  };
 
-const handleCancelRequest = async (userId: number) => {
-  try {
-    const res = await fetch('/api/friends/cancel', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ toUserId: userId }),
-    });
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || 'Failed to cancel request');
+  const handleCancelRequest = async (userId: number) => {
+    try {
+      const res = await fetch('/api/friends/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toUserId: userId }),
+      });
+      if (!res.ok) return;
+      setSentRequests(prev => prev.filter(u => u.id !== userId));
+    } catch (err) {
+      console.error(err);
     }
-    // Remove from sentRequests
-    setSentRequests(prev => prev.filter(u => u.id !== userId));
-    alert('Friend request cancelled');
-  } catch (err) {
-    console.error(err);
-    alert('Error cancelling friend request');
-  }
-};
-
+  };
 
   const handleSaveProfile = async () => {
     try {
@@ -123,16 +96,9 @@ const handleCancelRequest = async (userId: number) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username }),
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || 'Failed to update profile');
-      }
-
-      alert('Profile updated!');
+      if (!res.ok) throw new Error();
     } catch (err) {
       console.error(err);
-      alert('Error saving profile');
     }
   };
 
@@ -145,7 +111,6 @@ const handleCancelRequest = async (userId: number) => {
       setSearchResults(data);
     } catch (err) {
       console.error('Search failed:', err);
-      alert('Search failed');
     } finally {
       setLoadingSearch(false);
     }
@@ -161,14 +126,9 @@ const handleCancelRequest = async (userId: number) => {
       });
       if (res.ok) {
         setSearchResults(prev => prev.filter(user => user.id !== userId));
-        alert('Friend request sent');
-      } else {
-        const data = await res.json();
-        alert(data.error || 'Failed to send request');
       }
     } catch (err) {
       console.error(err);
-      alert('Failed to send request');
     } finally {
       setSendingRequestId(null);
     }
@@ -178,7 +138,6 @@ const handleCancelRequest = async (userId: number) => {
     if (session?.user) {
       setUsername(session.user.name || '');
       setEmail(session.user.email || '');
-      // TODO: Fetch friends, incomingRequests, sentRequests here
     }
   }, [session]);
 
@@ -187,28 +146,27 @@ const handleCancelRequest = async (userId: number) => {
   }, [status]);
 
   useEffect(() => {
-  if (!session?.user?.email) return;
-
-  const fetchFriendsData = async () => {
-    try {
-      const res = await fetch('/api/friends/list');
-      if (!res.ok) {
+    const fetchFriends = async () => {
+      try {
+        const res = await fetch('/api/friends/list');
+        if (!res.ok) throw new Error();
         const data = await res.json();
-        throw new Error(data.error || 'Failed to load friends data');
+
+        setFriends(data.friends || []);
+        console.log(data.incomingRequests)
+        setIncomingRequests(data.incomingRequests || []);
+        setSentRequests(data.sentRequests || []);
+        setFriendsError('');
+      } catch (err) {
+        console.error(err);
+        setFriendsError('Could not load friends data.');
       }
-      const { friends, incomingRequests, sentRequests } = await res.json();
-      setFriends(friends.map((f: any) => ({ id: f.id, name: f.username || f.name || '', email: f.email })));
-      setIncomingRequests(incomingRequests.map((r: any) => ({ id: r.id, name: r.username || r.name || '', email: r.email })));
-      setSentRequests(sentRequests.map((r: any) => ({ id: r.id, name: r.username || r.name || '', email: r.email })));
-    } catch (err) {
-      console.error(err);
-      alert('Failed to load friends data');
+    };
+
+    if (activeTab === 'friends') {
+      fetchFriends();
     }
-  };
-
-  fetchFriendsData();
-}, [session]);
-
+  }, [activeTab]);
 
   if (loading) {
     return (
@@ -224,9 +182,14 @@ const handleCancelRequest = async (userId: number) => {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-      <h1 className="text-2xl font-bold">Account Management</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Account Management</h1>
+        <Link href="/">
+          <Button variant="outline" className="text-sm">← Back to Dashboard</Button>
+        </Link>
+      </div>
 
-      <Tabs defaultValue="profile" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="bg-muted/40">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="friends">Friends</TabsTrigger>
@@ -235,32 +198,25 @@ const handleCancelRequest = async (userId: number) => {
 
         <TabsContent value="profile" className="space-y-6">
           <h2 className="text-xl font-semibold">Profile Information</h2>
-
           <div className="space-y-4 max-w-md">
             <div>
               <label className="block text-sm font-medium">Username</label>
               <Input value={username} onChange={(e) => setUsername(e.target.value)} />
             </div>
-
             <div>
               <label className="block text-sm font-medium">Email</label>
               <Input value={email} disabled className="opacity-75 cursor-not-allowed" />
             </div>
-
-            {/* Optional bio or avatar could be here */}
-
-            {/* 
-            <Button onClick={handleSaveProfile} className="bg-primary text-primary-foreground">
-              Save Changes
-            </Button>
-            */}
           </div>
         </TabsContent>
 
         <TabsContent value="friends" className="space-y-6">
           <h2 className="text-xl font-semibold">Friends</h2>
+          {friendsError && (
+            <p className="text-sm text-red-500">{friendsError}</p>
+          )}
 
-          {/* Search & Invite Section */}
+          {/* Search */}
           <div className="pt-6 space-y-2">
             <h3 className="text-md font-medium">Search and Invite Users</h3>
             <div className="flex gap-2">
@@ -283,7 +239,7 @@ const handleCancelRequest = async (userId: number) => {
                     className="flex justify-between items-center p-2 border rounded bg-muted/50"
                   >
                     <div>
-                      <p className="font-medium">{user.name}</p>
+                      <p className="font-medium">{user.username}</p>
                       <p className="text-sm text-muted-foreground">{user.email}</p>
                     </div>
                     <Button
@@ -299,14 +255,17 @@ const handleCancelRequest = async (userId: number) => {
             )}
           </div>
 
-          {/* Friends List */}
+          {/* Friends list */}
           <div>
             <h3 className="text-md font-medium mb-2">Your Friends</h3>
             {friends.length > 0 ? (
               <ul className="space-y-2">
                 {friends.map((friend) => (
                   <li key={friend.id} className="flex justify-between items-center bg-muted p-3 rounded-md">
-                    <span>{friend.name}</span>
+                    <span>
+  {friend.username ?? friend.email}
+  {friend.username && friend.email ? ` (${friend.email})` : ''}
+</span>
                     <Button variant="outline" size="sm" onClick={() => handleRemoveFriend(friend.id)}>
                       Remove
                     </Button>
@@ -318,21 +277,21 @@ const handleCancelRequest = async (userId: number) => {
             )}
           </div>
 
-          {/* Incoming Requests */}
+          {/* Incoming */}
           <div>
             <h3 className="text-md font-medium mb-2">Incoming Requests</h3>
             {incomingRequests.length > 0 ? (
               <ul className="space-y-2">
+                console.log(incomingRequests);
                 {incomingRequests.map((request) => (
                   <li key={request.id} className="flex justify-between items-center bg-muted p-3 rounded-md">
-                    <span>{request.name}</span>
+                   <span>
+  {request.username ?? request.email}
+  {request.username && request.email ? ` (${request.email})` : ''}
+</span>
                     <div className="space-x-2">
-                      <Button size="sm" onClick={() => handleAcceptRequest(request.id)}>
-                        Accept
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleDeclineRequest(request.id)}>
-                        Decline
-                      </Button>
+                      <Button size="sm" onClick={() => handleAcceptRequest(request.id)}>Accept</Button>
+                      <Button size="sm" variant="destructive" onClick={() => handleDeclineRequest(request.id)}>Decline</Button>
                     </div>
                   </li>
                 ))}
@@ -342,14 +301,17 @@ const handleCancelRequest = async (userId: number) => {
             )}
           </div>
 
-          {/* Sent Requests */}
+          {/* Sent */}
           <div>
             <h3 className="text-md font-medium mb-2">Sent Requests</h3>
             {sentRequests.length > 0 ? (
               <ul className="space-y-2">
                 {sentRequests.map((request) => (
                   <li key={request.id} className="flex justify-between items-center bg-muted p-3 rounded-md">
-                    <span>{request.name}</span>
+                    <span>
+  {request.username ?? request.email}
+  {request.username && request.email ? ` (${request.email})` : ''}
+</span>
                     <Button variant="outline" size="sm" onClick={() => handleCancelRequest(request.id)}>
                       Cancel
                     </Button>
