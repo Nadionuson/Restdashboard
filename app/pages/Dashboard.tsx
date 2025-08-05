@@ -4,17 +4,17 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { 
-  Plus, 
-  Filter, 
-  Search, 
-  Grid3X3, 
-  Star, 
-  MapPin, 
+import {
+  Plus,
+  Filter,
+  Search,
+  Grid3X3,
+  Star,
+  MapPin,
   Calendar,
   User,
-  Settings,
-  LogOut
+  Users,
+  Globe2
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -47,6 +47,17 @@ export default function Dashboard() {
   const { data: session, status } = useSession();
   const currentUserId = session?.user?.id ? Number(session.user.id) : undefined;
 
+  const [visibilityFilters, setVisibilityFilters] = useState<string[]>(['all']);
+
+  const toggleFilter = (key: string) => {
+    setVisibilityFilters((prev) =>
+      prev.includes(key)
+        ? prev.filter((k) => k !== key)
+        : [...prev, key]
+    );
+  };
+
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.replace('/signin');
@@ -61,23 +72,23 @@ export default function Dashboard() {
 
         console.log('Fetched locations:', data);
 
-         // Case 1: if API returns object { cities: string[], neighborhoods: string[] }
-    if (Array.isArray(data.cities) && Array.isArray(data.neighborhoods)) {
-      setCities(data.cities);
-      setneighborhoods(data.neighborhoods);
-    }
+        // Case 1: if API returns object { cities: string[], neighborhoods: string[] }
+        if (Array.isArray(data.cities) && Array.isArray(data.neighborhoods)) {
+          setCities(data.cities);
+          setneighborhoods(data.neighborhoods);
+        }
 
-    // Case 2: fallback if it returns a single array
-    else if (Array.isArray(data)) {
-      setCities(data);
-      setneighborhoods(data);
-    }
+        // Case 2: fallback if it returns a single array
+        else if (Array.isArray(data)) {
+          setCities(data);
+          setneighborhoods(data);
+        }
 
         // Error fallback
-    else {
-      throw new Error('Unexpected data format in /api/locations');
-    }
-        
+        else {
+          throw new Error('Unexpected data format in /api/locations');
+        }
+
       } catch (error) {
         console.error('Failed to fetch locations', error);
         router.push('/error');
@@ -93,7 +104,7 @@ export default function Dashboard() {
       const cityRestaurants = restaurants.filter(r => r.city === cityFilter);
       const uniqueneighborhoods = [...new Set(cityRestaurants.map(r => r.neighborhood))].filter((location): location is string => Boolean(location));
       setneighborhoods(uniqueneighborhoods);
-      
+
       // Clear detailed location filter if the current value is not available for the selected city
       if (neighborhoodFilter && !uniqueneighborhoods.includes(neighborhoodFilter)) {
         setneighborhoodFilter('');
@@ -187,13 +198,13 @@ export default function Dashboard() {
                 <h1 className="text-xl font-semibold">Restaurant Hub</h1>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <User className="w-4 h-4" />
                 <Link href="/account" className="text-sm text-muted-foreground hover:underline">
-  {session?.user?.username}
-</Link>
+                  {session?.user?.username}
+                </Link>
               </div>
               <LogoutButton />
             </div>
@@ -214,8 +225,8 @@ export default function Dashboard() {
                 Manage your restaurant collection and discover new places
               </p>
             </div>
-            
-            <Button 
+
+            <Button
               onClick={() => { setEditing(null); setShowModal(true); }}
               className="btn-modern bg-primary text-primary-foreground hover:bg-primary/90"
             >
@@ -238,7 +249,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          
+
           <div className="card-modern p-6">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -247,7 +258,7 @@ export default function Dashboard() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Average Rating</p>
                 <p className="text-2xl font-bold">
-                  {filteredRestaurants.length > 0 
+                  {filteredRestaurants.length > 0
                     ? (filteredRestaurants.reduce((acc, r) => acc + (r.evaluation.finalEvaluation || 0), 0) / filteredRestaurants.length).toFixed(1)
                     : '0.0'
                   }
@@ -255,7 +266,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          
+
           <div className="card-modern p-6">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -267,7 +278,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          
+
           <div className="card-modern p-6">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -305,26 +316,49 @@ export default function Dashboard() {
           </div>
 
           {/* Quick Filters */}
-          <div className="flex items-center space-x-4 mb-4">
-            <label className="flex items-center space-x-2 text-sm">
-              <input
-                type="checkbox"
-                checked={showMineOnly}
-                onChange={() => setShowMineOnly((prev) => !prev)}
-                className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
-              />
-              <span>My Restaurants</span>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-muted-foreground mb-1">
+              Quick Filter
             </label>
-            <label className="flex items-center space-x-2 text-sm">
-              <input
-                type="checkbox"
-                checked={justFriends}
-                onChange={() => setJustFriends((prev) => !prev)}
-                className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
-              />
-              <span>Friends Only</span>
-            </label>
+            <div className="flex gap-2 flex-wrap">
+
+              <button
+                type="button"
+                onClick={() => toggleFilter('all')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border 
+        ${visibilityFilters.includes('all')
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background text-muted-foreground border-border hover:bg-muted'}`}
+              >
+                <Globe2 className="w-4 h-4" />
+                Show Me Everything
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleFilter('friends')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border 
+        ${visibilityFilters.includes('friends')
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background text-muted-foreground border-border hover:bg-muted'}`}
+              >
+                <Users className="w-4 h-4" />
+                Friends'
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleFilter('mine')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border 
+        ${visibilityFilters.includes('mine')
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background text-muted-foreground border-border hover:bg-muted'}`}
+              >
+                <User className="w-4 h-4" />
+                Just Mine
+              </button>
+            </div>
           </div>
+
+
 
           {/* Search Bar */}
           <div className="relative mb-4">
