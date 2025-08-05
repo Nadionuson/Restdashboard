@@ -77,6 +77,28 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id as string
         token.email = user.email; 
         token.username = user.username || user.name;
+        
+        const friends = await prisma.friend.findMany({
+      where: {
+        status: 'ACCEPTED',
+        OR: [
+          { addresseeId: Number(user.id) },
+          { requesterId: Number(token.id) },
+        ],
+      },
+      select: {
+        requesterId: true,
+        addresseeId: true,
+      },
+    });
+const friendIds = friends.map(f =>
+      f.requesterId === Number(user.id) ? f.addresseeId : f.requesterId
+    );
+
+    token.friends = friendIds;
+
+
+    
       }
       return token
     },

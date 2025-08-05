@@ -28,6 +28,8 @@ import { Loading } from '@/components/ui/loading';
 
 export default function Dashboard() {
   const { restaurants, refetch } = useRestaurants();
+  
+
   const [editing, setEditing] = useState<Restaurant | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [cities, setCities] = useState<string[]>([]);
@@ -38,24 +40,48 @@ export default function Dashboard() {
   const [finalEvaluationFilter, setFinalEvaluationFilter] = useState('');
   const [nameSearchFilter, setNameSearchFilter] = useState('');
   const [hashtagFilter, setHashtagFilter] = useState('');
-
   const [showMineOnly, setShowMineOnly] = useState(true);
-  const [justFriends, setJustFriends] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  
 
   const router = useRouter();
   const { data: session, status } = useSession();
-  const currentUserId = session?.user?.id ? Number(session.user.id) : undefined;
 
-  const [visibilityFilters, setVisibilityFilters] = useState<string[]>(['all']);
+  const currentUserId = session?.user?.id ? Number(session.user.id) : undefined;
+const friendIds = session?.user?.friendIds || [];
+
+const enrichedRestaurants = restaurants.map((r) => ({
+  ...r,
+  owner: {
+    ...r.owner,
+    email: r.owner?.email ?? '',
+    username: r.owner?.username ?? '',
+    id: r.owner?.id ?? 0,
+    isFriend: friendIds.includes(r.owner?.id ?? 0),
+  },
+}));
+
+ const [visibilityFilters, setVisibilityFilters] = useState<string[]>(['all']);
+
 
   const toggleFilter = (key: string) => {
-    setVisibilityFilters((prev) =>
-      prev.includes(key)
-        ? prev.filter((k) => k !== key)
-        : [...prev, key]
-    );
-  };
+  setVisibilityFilters((prev) => {
+    const isSelected = prev.includes(key);
+
+    if (key === 'all') {
+      // Selecting "Show Me Everything" clears the others
+      return isSelected ? [] : ['all'];
+    }
+
+    // Selecting "mine" or "friends" removes "all"
+    const updated = isSelected
+      ? prev.filter((k) => k !== key)
+      : [...prev.filter((k) => k !== 'all'), key];
+
+    return updated;
+  });
+};
+
 
 
   useEffect(() => {
@@ -70,7 +96,7 @@ export default function Dashboard() {
         const res = await fetch('/api/locations');
         const data = await res.json();
 
-        console.log('Fetched locations:', data);
+       
 
         // Case 1: if API returns object { cities: string[], neighborhoods: string[] }
         if (Array.isArray(data.cities) && Array.isArray(data.neighborhoods)) {
@@ -116,8 +142,22 @@ export default function Dashboard() {
     }
   }, [cityFilter, restaurants, neighborhoodFilter]);
 
-  const filteredRestaurants = restaurants.filter((r) => {
-    const matchesMine = showMineOnly ? r.owner?.id === currentUserId : true;
+ 
+  const filteredRestaurants = enrichedRestaurants.filter((r) => {
+    
+
+  const matchesVisibility = (() => {
+    if (visibilityFilters.includes('all')) return true;
+
+    const isMine = r.owner?.id === currentUserId;
+    const isFriend = r.owner?.isFriend && r.owner?.id !== currentUserId;
+
+    if (visibilityFilters.includes('mine') && isMine) return true;
+    if (visibilityFilters.includes('friends') && isFriend) return true;
+
+    return false;
+  })();
+
     const matchesCity = cityFilter ? r.city === cityFilter : true;
     const matchesneighborhood = neighborhoodFilter ? r.neighborhood === neighborhoodFilter : true;
     const matchesStatus = statusFilter ? r.status === statusFilter : true;
@@ -132,7 +172,7 @@ export default function Dashboard() {
       : true;
 
     return (
-      matchesMine &&
+      matchesVisibility &&
       matchesCity &&
       matchesneighborhood &&
       matchesStatus &&
