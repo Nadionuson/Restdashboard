@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Restaurant, Evaluation, getFinalEvaluation, RestaurantStatus, Hashtag } from '../app/types/restaurant';
+import { Restaurant, Evaluation, getFinalEvaluation, RestaurantStatus, Hashtag, PrivacyLevel } from '../app/types/restaurant';
 import StarRating from './ui/starRating';
 import HashtagSelector from './hashtagSelector';
 import { Building2, Save, ChevronDown, ChevronRight } from 'lucide-react';
@@ -23,7 +23,8 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
   const [createdAt, setCreatedAt] = useState<string | Date>('');
   const [updatedAt, setUpdatedAt] = useState<string | Date>('');
   const [highlights, setHighlights] = useState('');
-  const [isPrivate, setIsPrivate] = useState(initialData?.isPrivate ?? false);
+  const [privacyLevel, setPrivacyLevel] = useState<PrivacyLevel>(PrivacyLevel.PUBLIC);
+
   const [showRatings, setShowRatings] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -71,7 +72,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       setHighlights(initialData.highlights || '');
       setEvaluation(initialData.evaluation);
       setSelectedHashtags(initialData.hashtags || []);
-      setIsPrivate(initialData.isPrivate ?? false);
+      setPrivacyLevel(initialData.privacyLevel ?? 'PUBLIC');
       setCreatedAt(initialData.createdAt);
       setUpdatedAt(initialData.updatedAt);
       setAddress(initialData.address ?? '');
@@ -103,7 +104,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       highlights,
       evaluation,
       hashtags: selectedHashtags,
-      isPrivate,
+      privacyLevel,
       createdAt,
       updatedAt,
       address,
@@ -202,7 +203,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       <div className="space-y-4">
         <h3 className="text-lg font-semibold flex items-center space-x-2">
           <Building2 className="w-5 h-5 text-muted-foreground" />
-          <span>Basic Information</span>
+          <span>Basic Informsssssation</span>
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -218,10 +219,42 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
           </select>
         </div>
 
-        <div className="flex items-center gap-2">
-          <input type="checkbox" id="isPrivate" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
-          <label htmlFor="isPrivate">Private</label>
-        </div>
+        <div className="space-y-2">
+  <label className="block text-sm font-medium text-muted-foreground">Visibility</label>
+  <div className="flex gap-4">
+    <label className="flex items-center gap-1">
+      <input
+        type="radio"
+        name="privacyLevel"
+        value="PUBLIC"
+        checked={privacyLevel === 'PUBLIC'}
+        onChange={() => setPrivacyLevel(PrivacyLevel.PUBLIC)}
+      />
+      Public
+    </label>
+    <label className="flex items-center gap-1">
+      <input
+        type="radio"
+        name="privacyLevel"
+        value="FRIENDS"
+        checked={privacyLevel === 'FRIENDS_ONLY'}
+        onChange={() => setPrivacyLevel(PrivacyLevel.FRIENDS_ONLY)}
+      />
+      Friends Only
+    </label>
+    <label className="flex items-center gap-1">
+      <input
+        type="radio"
+        name="privacyLevel"
+        value="PRIVATE"
+        checked={privacyLevel === 'PRIVATE'}
+        onChange={() => setPrivacyLevel(PrivacyLevel.PRIVATE)}
+      />
+      Private
+    </label>
+  </div>
+</div>
+
       </div>
 
       {/* Additional Info */}

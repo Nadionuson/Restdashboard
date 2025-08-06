@@ -9,6 +9,12 @@ export type Evaluation = {
 
 export type RestaurantStatus = 'Want to go' | 'Tried it';
 
+export enum PrivacyLevel {
+  PUBLIC = 'PUBLIC',
+  FRIENDS_ONLY = 'FRIENDS_ONLY',
+  PRIVATE = 'PRIVATE',
+}
+
 export type Hashtag = {
   id: number;
   name: string;
@@ -32,7 +38,7 @@ export type Restaurant = {
   phoneNumber: string;
   openingHours: string;
   hashtags?: Hashtag[];
-  isPrivate: boolean;
+  privacyLevel: PrivacyLevel;
   owner?: User;  // Include user info
   createdAt: string | Date;
   updatedAt: string | Date;

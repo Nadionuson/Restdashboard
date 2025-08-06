@@ -66,6 +66,7 @@
         highlights,
         evaluation,
         hashtags,
+        privacyLevel,
         address,
         phoneNumber,
         openingHours,
@@ -84,7 +85,7 @@
           phoneNumber: data.phoneNumber,
           openingHours: data.openingHours,
           ownerId: user.id,
-          privacyLevel: data.private ?? "PUBLIC",
+          privacyLevel: data.privacyLevel ?? "PUBLIC",
           hashtags: {
             connectOrCreate: hashtags.map((tag: { name: string }) => ({
               where: { name: tag.name.toLowerCase().trim() },
