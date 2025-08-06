@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Filters } from './ui/filter';
-import router from 'next/router';
+import React from 'react';
+import Select from 'react-select';
 import { MapPin, Tag, Star, Filter as FilterIcon } from 'lucide-react';
 import { Badge } from './ui/badge';
 
@@ -19,8 +18,9 @@ interface DashboardFiltersProps {
   setFinalEvaluationFilter: (value: string) => void;
   nameSearchFilter: string;
   setNameSearchFilter: (value: string) => void;
-  hashtagFilter: string;
-  setHashtagFilter: (value: string) => void;
+  hashtagFilter: string[];
+  setHashtagFilter: (value: string[]) => void;
+  allHashtags: string[];
 }
 
 export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
@@ -34,43 +34,35 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
   setStatusFilter,
   finalEvaluationFilter,
   setFinalEvaluationFilter,
-  nameSearchFilter,
-  setNameSearchFilter,
   hashtagFilter,
   setHashtagFilter,
+  allHashtags,
 }) => {
-  const [hashtags, setHashtags] = useState<string[]>([]);
-
-  useEffect(() => {
-    const fetchHashtags = async () => {
-      try {
-        const res = await fetch('/api/hashtags');
-        const data = await res.json();
-        setHashtags(data.map((tag: { name: string }) => tag.name));
-      } catch (err) {
-        console.error('Failed to fetch hashtags', err);
-        router.push('/error');
-      }
-    };
-
-    fetchHashtags();
-  }, []);
-
   const clearAllFilters = () => {
     setCityFilter('');
     setneighborhoodFilter('');
     setStatusFilter('');
     setFinalEvaluationFilter('');
-    setHashtagFilter('');
+    setHashtagFilter([]);
   };
 
-  const hasActiveFilters = cityFilter || neighborhoodFilter || statusFilter || finalEvaluationFilter || hashtagFilter;
+  const hasActiveFilters =
+    !!cityFilter ||
+    !!neighborhoodFilter ||
+    !!statusFilter ||
+    !!finalEvaluationFilter ||
+    (hashtagFilter && hashtagFilter.length > 0);
+
+  const hashtagOptions = allHashtags.map((tag) => ({
+    label: `#${tag}`,
+    value: tag,
+  }));
 
   return (
     <div className="space-y-6">
       {/* Filter Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* City Filter */}
+        {/* City */}
         <div className="space-y-2">
           <label className="flex items-center space-x-2 text-sm font-medium">
             <MapPin className="w-4 h-4 text-muted-foreground" />
@@ -82,7 +74,7 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
             className="input-modern"
           >
             <option value="">All Cities</option>
-            {cities?.map((city) => (
+            {cities.map((city) => (
               <option key={city} value={city}>
                 {city}
               </option>
@@ -90,27 +82,27 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
           </select>
         </div>
 
-                 {/* Neighborhood Filter */}
-         <div className="space-y-2">
-           <label className="flex items-center space-x-2 text-sm font-medium">
-             <MapPin className="w-4 h-4 text-muted-foreground" />
-             <span>Neighborhood</span>
-           </label>
-           <select
-             value={neighborhoodFilter}
-             onChange={(e) => setneighborhoodFilter(e.target.value)}
-             className="input-modern"
-           >
-             <option value="">All Neighborhoods</option>
-             {neighborhoods?.map((location) => (
-               <option key={location} value={location}>
-                 {location}
-               </option>
-             ))}
-           </select>
-         </div>
+        {/* Neighborhood */}
+        <div className="space-y-2">
+          <label className="flex items-center space-x-2 text-sm font-medium">
+            <MapPin className="w-4 h-4 text-muted-foreground" />
+            <span>Neighborhood</span>
+          </label>
+          <select
+            value={neighborhoodFilter}
+            onChange={(e) => setneighborhoodFilter(e.target.value)}
+            className="input-modern"
+          >
+            <option value="">All Neighborhoods</option>
+            {neighborhoods.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        {/* Status Filter */}
+        {/* Status */}
         <div className="space-y-2">
           <label className="flex items-center space-x-2 text-sm font-medium">
             <FilterIcon className="w-4 h-4 text-muted-foreground" />
@@ -128,7 +120,7 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
           </select>
         </div>
 
-        {/* Rating Filter */}
+        {/* Rating */}
         <div className="space-y-2">
           <label className="flex items-center space-x-2 text-sm font-medium">
             <Star className="w-4 h-4 text-muted-foreground" />
@@ -146,9 +138,30 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
             <option value="1">1+ Star</option>
           </select>
         </div>
+
+        {/* Hashtag Multi-Select */}
+        <div className="space-y-2">
+          <label className="flex items-center space-x-2 text-sm font-medium">
+            <Tag className="w-4 h-4 text-muted-foreground" />
+            <span>Hashtags</span>
+          </label>
+          <Select
+            isMulti
+            options={hashtagOptions}
+            value={hashtagOptions.filter((opt) =>
+              hashtagFilter.includes(opt.value)
+            )}
+            onChange={(selected) =>
+              setHashtagFilter(selected.map((s) => s.value))
+            }
+            placeholder="Select hashtags..."
+            className="react-select-container"
+            classNamePrefix="react-select"
+          />
+        </div>
       </div>
 
-      {/* Active Filters Display */}
+      {/* Active Filters */}
       {hasActiveFilters && (
         <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border/50">
           <div className="flex items-center space-x-2">
@@ -178,12 +191,12 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
                   {finalEvaluationFilter}+ stars
                 </Badge>
               )}
-              {hashtagFilter && (
-                <Badge variant="default" size="sm">
+              {hashtagFilter.map((tag) => (
+                <Badge key={tag} variant="default" size="sm">
                   <Tag className="w-3 h-3 mr-1" />
-                  #{hashtagFilter}
+                  #{tag}
                 </Badge>
-              )}
+              ))}
             </div>
           </div>
           <button

@@ -39,8 +39,7 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState('');
   const [finalEvaluationFilter, setFinalEvaluationFilter] = useState('');
   const [nameSearchFilter, setNameSearchFilter] = useState('');
-  const [hashtagFilter, setHashtagFilter] = useState('');
-  const [showMineOnly, setShowMineOnly] = useState(true);
+  const [hashtagFilter, setHashtagFilter] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   
 
@@ -142,7 +141,12 @@ const enrichedRestaurants = restaurants.map((r) => ({
     }
   }, [cityFilter, restaurants, neighborhoodFilter]);
 
- 
+ const allHashtags = Array.from(
+  new Set(
+    restaurants.flatMap((r) => r.hashtags?.map((tag) => tag.name) || [])
+  )
+).sort();
+
   const filteredRestaurants = enrichedRestaurants.filter((r) => {
     
 
@@ -167,9 +171,11 @@ const enrichedRestaurants = restaurants.map((r) => ({
     const matchesName = nameSearchFilter
       ? r.name.toLowerCase().includes(nameSearchFilter.replace('*', '').toLowerCase())
       : true;
-    const matchesHashtag = hashtagFilter
-      ? r.hashtags?.some((tag) => tag.name === hashtagFilter)
-      : true;
+    const matchesHashtag = hashtagFilter.length
+  ? hashtagFilter.every((tag) =>
+      r.hashtags?.some((h) => h.name === tag)
+    )
+  : true;
 
     return (
       matchesVisibility &&
@@ -427,7 +433,8 @@ const enrichedRestaurants = restaurants.map((r) => ({
               nameSearchFilter={nameSearchFilter}
               setNameSearchFilter={setNameSearchFilter}
               hashtagFilter={hashtagFilter}
-              setHashtagFilter={setHashtagFilter}
+setHashtagFilter={setHashtagFilter}
+allHashtags={allHashtags}
             />
           )}
         </div>

@@ -127,4 +127,18 @@
   .gradient-card {
     background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card)/0.95) 100%);
   }
+
+  .react-select__control {
+  @apply input-modern p-0 min-h-[40px] shadow-none border-border text-foreground bg-background;
+}
+.react-select__menu {
+  @apply bg-background border border-border shadow-lg rounded-md;
+}
+.react-select__option {
+  @apply text-sm text-foreground px-3 py-2 hover:bg-muted;
+}
+.react-select__multi-value {
+  @apply bg-muted text-foreground rounded px-2;
+}
+
 }
