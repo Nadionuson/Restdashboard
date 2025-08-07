@@ -1,42 +1,40 @@
-import { Dialog } from "@headlessui/react";
-import { RestaurantForm } from "./RestaurantForm";
-import { Button } from './ui/button';
+// components/RestaurantCard.tsx
+import { Restaurant } from "@/app/types/restaurant";
 
-type RestaurantDrawerProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  restaurant: any;
-  onSave: (data: any) => void;
+type Props = {
+  restaurant: Restaurant;
+  currentUserId: number | undefined;
+  setEditing: (r: Restaurant | null) => void;
+  setShowModal: (b: boolean) => void;
+  handleDelete?: (id: number) => void;
 };
 
-export const RestaurantDrawer = ({ isOpen, onClose, restaurant, onSave }: RestaurantDrawerProps) => {
+export const RestaurantCard: React.FC<Props> = ({
+  restaurant,
+  setEditing,
+  setShowModal,
+}) => {
   return (
-    <Dialog open={isOpen} onClose={onClose}>
-      <div className="p-4 max-w-lg mx-auto">
-        <h2 className="text-2xl font-semibold mb-4">Edit Restaurant</h2>
-        
-        {/* Display Hashtags */}
-        <div className="mb-4">
-          <h3 className="text-xl font-medium">Hashtags</h3>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {restaurant.hashtags && restaurant.hashtags.length > 0 ? (
-              restaurant.hashtags.map((hashtag: string, index: number) => (
-                <span key={index} className="bg-gray-200 text-sm py-1 px-2 rounded-full">#{hashtag}</span>
-              ))
-            ) : (
-              <p>No hashtags added yet</p>
-            )}
-          </div>
-        </div>
+    <div
+      onClick={() => {
+        setEditing(restaurant);
+        setShowModal(true);
+      }}
+      className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg cursor-pointer transition-all"
+    >
+      <h3 className="text-lg font-semibold">{restaurant.name}</h3>
+      <p className="text-sm text-gray-500">{restaurant.city || restaurant.neighborhood}</p>
 
-        {/* Restaurant Form */}
-        <RestaurantForm initialData={restaurant} onSubmit={onSave} />
-        
-        {/* Close Button */}
-        <div className="mt-4">
-          <Button variant="outline" onClick={onClose}>Close</Button>
-        </div>
+      <div className="mt-2 flex flex-wrap gap-1">
+        {restaurant.hashtags?.map((tag, i) => (
+          <span
+            key={i}
+            className="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full"
+          >
+            #{tag.name}
+          </span>
+        ))}
       </div>
-    </Dialog>
+    </div>
   );
 };

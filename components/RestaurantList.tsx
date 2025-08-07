@@ -34,20 +34,26 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({
   setShowModal,
   setEditing,
 }) => {
-  const [sortMode, setSortMode] = useState<'rating' | 'name'>('rating');
+  const [sortMode, setSortMode] = useState<'rating' | 'name' | 'createdAt'>('rating');
 
   const sortedRestaurants = React.useMemo(() => {
     if (sortMode === 'rating') {
       return [...restaurants].sort(
         (a, b) => (b.evaluation.finalEvaluation ?? 0) - (a.evaluation.finalEvaluation ?? 0)
       );
-    }
+    } 
     if (sortMode === 'name') {
       return [...restaurants].sort((a, b) =>
         a.name.toLowerCase().localeCompare(b.name.toLowerCase())
       );
     }
-    
+    if (sortMode === 'createdAt') {
+      return [...restaurants].sort((a, b) => {
+        const aDate = new Date(a.createdAt).getTime();
+        const bDate = new Date(b.createdAt).getTime();
+        return bDate - aDate;
+      });
+    }
     return restaurants;
   }, [sortMode, restaurants]);
 
@@ -85,11 +91,12 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({
           <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
           <select
             value={sortMode}
-            onChange={(e) => setSortMode(e.target.value as 'rating' | 'name')}
-            className="input-modern text-sm w-32"
+            onChange={(e) => setSortMode(e.target.value as 'rating' | 'name' | 'createdAt')}
+            className="input-modern text-sm w-36"
           >
             <option value="rating">Rating</option>
             <option value="name">Name</option>
+            <option value="createdAt">Create Date</option>
           </select>
         </div>
       </div>
