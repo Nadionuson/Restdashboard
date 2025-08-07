@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Restaurant, Evaluation, getFinalEvaluation, RestaurantStatus, Hashtag } from '../app/types/restaurant';
+import { Restaurant, Evaluation, getFinalEvaluation, RestaurantStatus, Hashtag, PrivacyLevel } from '../app/types/restaurant';
 import StarRating from './ui/starRating';
 import HashtagSelector from './hashtagSelector';
 import { Building2, Save, ChevronDown, ChevronRight } from 'lucide-react';
@@ -23,7 +23,8 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
   const [createdAt, setCreatedAt] = useState<string | Date>('');
   const [updatedAt, setUpdatedAt] = useState<string | Date>('');
   const [highlights, setHighlights] = useState('');
-  const [isPrivate, setIsPrivate] = useState(initialData?.isPrivate ?? false);
+  const [privacyLevel, setPrivacyLevel] = useState<PrivacyLevel>(PrivacyLevel.PUBLIC);
+
   const [showRatings, setShowRatings] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -71,7 +72,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       setHighlights(initialData.highlights || '');
       setEvaluation(initialData.evaluation);
       setSelectedHashtags(initialData.hashtags || []);
-      setIsPrivate(initialData.isPrivate ?? false);
+      setPrivacyLevel(initialData.privacyLevel ?? 'PUBLIC');
       setCreatedAt(initialData.createdAt);
       setUpdatedAt(initialData.updatedAt);
       setAddress(initialData.address ?? '');
@@ -103,7 +104,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       highlights,
       evaluation,
       hashtags: selectedHashtags,
-      isPrivate,
+      privacyLevel,
       createdAt,
       updatedAt,
       address,
@@ -202,7 +203,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       <div className="space-y-4">
         <h3 className="text-lg font-semibold flex items-center space-x-2">
           <Building2 className="w-5 h-5 text-muted-foreground" />
-          <span>Basic Information</span>
+          <span>Basic Informsssssation</span>
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -218,69 +219,46 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
           </select>
         </div>
 
-        <div className="flex items-center gap-2">
-          <input type="checkbox" id="isPrivate" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
-          <label htmlFor="isPrivate">Private</label>
-        </div>
-      </div>
-
-      {/* Additional Info */}
-<div className="border rounded-lg">
- <button
-  type="button"
-  className="w-full px-4 py-2 flex items-center justify-between text-left text-sm font-medium bg-muted text-muted-foreground"
-  onClick={() => setShowDetails((prev) => !prev)}
->
-  <div className="flex items-center gap-2">
-    <span>Additional Info</span>
-    {address
-      ? <span className="text-green-600">👍</span>
-      : <span className="text-gray-600">⛔ Awaiting for AI</span>}
+        <div className="space-y-2">
+  <label className="block text-sm font-medium text-muted-foreground">Visibility</label>
+  <div className="flex gap-4">
+    <label className="flex items-center gap-1">
+      <input
+        type="radio"
+        name="privacyLevel"
+        value="PUBLIC"
+        checked={privacyLevel === 'PUBLIC'}
+        onChange={() => setPrivacyLevel(PrivacyLevel.PUBLIC)}
+      />
+      Public
+    </label>
+    <label className="flex items-center gap-1">
+      <input
+        type="radio"
+        name="privacyLevel"
+        value="FRIENDS"
+        checked={privacyLevel === 'FRIENDS_ONLY'}
+        onChange={() => setPrivacyLevel(PrivacyLevel.FRIENDS_ONLY)}
+      />
+      Friends Only
+    </label>
+    <label className="flex items-center gap-1">
+      <input
+        type="radio"
+        name="privacyLevel"
+        value="PRIVATE"
+        checked={privacyLevel === 'PRIVATE'}
+        onChange={() => setPrivacyLevel(PrivacyLevel.PRIVATE)}
+      />
+      Private
+    </label>
   </div>
-  {showDetails ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-</button>
-
-
-  {showDetails && (
-    <div className="p-4 space-y-4 bg-muted/40">
-      {/* If I Leave Now */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">If you leave now</label>
-        <div className="flex gap-4 items-start">
-          <Button
-            type="button"
-            onClick={handleRouteCheck}
-            disabled={loadingRoute}
-            className="btn-modern bg-muted text-muted-foreground"
-          >
-            {loadingRoute ? 'Checking...' : 'If I Leave Now'}
-          </Button>
-          <div className="text-sm text-muted-foreground mt-1">
-            {routeInfo || '—'}
-          </div>
-        </div>
-      </div>
-
-      {/* Address fields */}
-      <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Address" />
-      <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Phone Number" />
-      <Input value={openingHours} onChange={(e) => setOpeningHours(e.target.value)} placeholder="Opening Hours" />
-
-      <Button
-        type="button"
-        onClick={handleGetDetails}
-        disabled={loadingDetails}
-        className="bg-secondary text-secondary-foreground"
-      >
-        {loadingDetails ? 'Refreshing...' : 'Refresh Additional Info'}
-      </Button>
-    </div>
-  )}
 </div>
 
+      </div>
 
 
-      {/* Ratings */}
+            {/* Ratings */}
 {status === 'Tried it' && (
   <div className="border rounded-lg">
     <button
@@ -308,6 +286,84 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
     )}
   </div>
 )}
+
+{/* Additional Info */}
+<div className="border rounded-lg">
+  <button
+    type="button"
+    className="w-full px-4 py-2 flex items-center justify-between text-left text-sm font-medium bg-muted text-muted-foreground"
+    onClick={() => setShowDetails((prev) => !prev)}
+  >
+    <div className="flex items-center gap-2">
+      <span>Additional Info</span>
+      {address ? (
+        <span className="text-green-600">👍</span>
+      ) : (
+        <span className="text-gray-600">⛔ Awaiting for AI</span>
+      )}
+    </div>
+
+    <div className="flex items-center gap-2">
+      <Button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation(); // prevent toggling details when clicking refresh
+          handleGetDetails();
+        }}
+        disabled={loadingDetails}
+        className="bg-secondary text-secondary-foreground"
+      >
+        {loadingDetails ? 'Refreshing...' : 'Refresh Additional Info'}
+      </Button>
+      {showDetails ? (
+        <ChevronDown className="h-4 w-4" />
+      ) : (
+        <ChevronRight className="h-4 w-4" />
+      )}
+    </div>
+  </button>
+
+  {showDetails && (
+    <div className="p-4 space-y-4 bg-muted/40">
+      {/* If I Leave Now */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium">If you leave now</label>
+        <div className="flex gap-4 items-start">
+          <Button
+            type="button"
+            onClick={handleRouteCheck}
+            disabled={loadingRoute}
+            className="btn-modern bg-muted text-muted-foreground"
+          >
+            {loadingRoute ? 'Checking...' : 'If I Leave Now'}
+          </Button>
+          <div className="text-sm text-muted-foreground mt-1">{routeInfo || '—'}</div>
+        </div>
+      </div>
+
+      {/* Address fields */}
+      <Input
+        value={address}
+        readOnly
+        placeholder="Address"
+        className="bg-gray-100 cursor-not-allowed"
+      />
+      <Input
+        value={phoneNumber}
+        readOnly
+        placeholder="Phone Number"
+        className="bg-gray-100 cursor-not-allowed"
+      />
+      <Input
+        value={openingHours}
+        readOnly
+        placeholder="Opening Hours"
+        className="bg-gray-100 cursor-not-allowed"
+      />
+    </div>
+  )}
+</div>
+
 
 
 {/* Tell Me More */}

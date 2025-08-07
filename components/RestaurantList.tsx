@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
-import { Restaurant } from '../app/types/restaurant';
+import { PrivacyLevel, Restaurant } from '../app/types/restaurant';
 import { 
   Star, 
   MapPin, 
@@ -105,7 +105,7 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {sortedRestaurants.map((r) => {
           const isOwner = r.owner?.id === Number(currentUserId);
-          const isPublic = !r.isPrivate;
+          const isPublic = r.privacyLevel === PrivacyLevel.PUBLIC
 
           return (
             <Card 
@@ -121,7 +121,7 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({
                   setShowModal(true);
                 }
               }}
-            >
+            > 
               {/* Card Header */}
               <div className="p-6 pb-4">
                 <div className="flex items-start justify-between mb-3">
@@ -217,7 +217,7 @@ export const RestaurantList: React.FC<RestaurantListProps> = ({
                     <span className="truncate max-w-20">{r.owner?.username ?? 'Unknown'}</span>
                     {isOwner && (
                       <span className="ml-1">
-                        {r.isPrivate ? (
+                        {r.privacyLevel === PrivacyLevel.PRIVATE ? (
                           <Eye className="w-3 h-3" />
                         ) : (
                           <span className="text-green-600">●</span>

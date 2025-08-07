@@ -7,7 +7,7 @@ import { Plus, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RestaurantList } from '@/components/RestaurantList';
 import { useRestaurants } from '@/app/hooks/useRestaurant';
-import { Restaurant } from '@/app/types/restaurant';
+import { PrivacyLevel, Restaurant } from '@/app/types/restaurant';
 import { DashboardFilters } from '@/components/DashboardFilters';
 import { RestaurantModal } from '@/components/DashboardModal';
 import { Loading } from '@/components/ui/loading';
@@ -73,10 +73,8 @@ export default function Dashboard() {
 
   const myRestaurants = enrichedRestaurants.filter(r => r.owner?.id === currentUserId);
   const friendRestaurants = enrichedRestaurants.filter(r => friendIds.includes(r.owner?.id ?? -1));
-  const publicSuggestions = enrichedRestaurants.filter(r => !r.isPrivate && r.owner?.id !== currentUserId && !friendIds.includes(r.owner?.id ?? -1));
+  const publicSuggestions = enrichedRestaurants.filter(r => r.privacyLevel !== PrivacyLevel.PRIVATE && r.owner?.id !== currentUserId && !friendIds.includes(r.owner?.id ?? -1));
   const recentlyAdded = [...enrichedRestaurants].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10);
-
-
 
 
   useEffect(() => {

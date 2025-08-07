@@ -8,7 +8,7 @@ type RestaurantDrawerProps = {
   restaurant: any;
   onSave: (data: any) => void;
 };
-
+ 
 export const RestaurantDrawer = ({ isOpen, onClose, restaurant, onSave }: RestaurantDrawerProps) => {
   return (
     <Dialog open={isOpen} onClose={onClose}>
