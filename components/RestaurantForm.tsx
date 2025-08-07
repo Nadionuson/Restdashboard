@@ -5,9 +5,10 @@ import { Input } from './ui/input';
 import { Restaurant, Evaluation, getFinalEvaluation, RestaurantStatus, Hashtag, PrivacyLevel } from '../app/types/restaurant';
 import StarRating from './ui/starRating';
 import HashtagSelector from './hashtagSelector';
-import { Building2, Save, ChevronDown, ChevronRight } from 'lucide-react';
+import { Building2, Save, ChevronDown, ChevronRight, RefreshCw } from 'lucide-react';
 import router from 'next/router';
 import { StarBar } from './ui/starbar';
+
 
 interface RestaurantFormProps {
   initialData: Restaurant | null;
@@ -305,16 +306,20 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
 
     <div className="flex items-center gap-2">
       <Button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation(); // prevent toggling details when clicking refresh
-          handleGetDetails();
-        }}
-        disabled={loadingDetails}
-        className="bg-secondary text-secondary-foreground"
-      >
-        {loadingDetails ? 'Refreshing...' : 'Refresh Additional Info'}
-      </Button>
+  type="button"
+  onClick={(e) => {
+    e.stopPropagation(); // Prevent accordion toggle
+    handleGetDetails();
+  }}
+  disabled={loadingDetails}
+  className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2 px-3 py-2 text-sm"
+>
+  <RefreshCw
+    className={`h-4 w-4 ${loadingDetails ? "animate-spin" : ""}`}
+  />
+  {loadingDetails ? "Refreshing..." : "Refresh"}
+</Button>
+
       {showDetails ? (
         <ChevronDown className="h-4 w-4" />
       ) : (

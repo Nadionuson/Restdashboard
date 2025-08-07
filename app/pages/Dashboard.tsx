@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Plus, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { RestaurantList } from '@/components/RestaurantList';
 import { useRestaurants } from '@/app/hooks/useRestaurant';
 import { PrivacyLevel, Restaurant } from '@/app/types/restaurant';
 import { DashboardFilters } from '@/components/DashboardFilters';
@@ -19,14 +18,14 @@ import { useDashboardFilters } from '@/app/hooks/useDashboardFilters';
 import { useLocations } from '@/app/hooks/useLocations';
 import { useRestaurantActions } from '@/app/hooks/useRestaurantActions';
 import { HorizontalRestaurantSection } from '@/components/Dashboard/HoriontalRestaurantSection';
+import { SortDropdown } from '@/components/SortDropDown';
 
 export default function Dashboard() {
   const { restaurants, refetch } = useRestaurants();
 
-
   const [editing, setEditing] = useState<Restaurant | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const { cities, setCities, neighborhoods, setNeighborhoods } = useLocations();
+  const { cities } = useLocations();
   const [cityFilter, setCityFilter] = useState('');
   const [neighborhoodsState, setNeighborhoodsState] = useState<string[]>([]);
   const [neighborhoodFilter, setneighborhoodFilter] = useState('');
@@ -36,21 +35,19 @@ export default function Dashboard() {
   const [hashtagFilter, setHashtagFilter] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
 
-
   const router = useRouter();
   const { data: session, status } = useSession();
 
   const currentUserId = session?.user?.id ? Number(session.user.id) : undefined;
   const friendIds = session?.user?.friendIds || [];
   const [visibilityFilters, setVisibilityFilters] = useState<string[]>(['all']);
+
   const toggleFilter = (key: string) => {
     setVisibilityFilters((prev) => {
       const isSelected = prev.includes(key);
       if (key === 'all') {
-        // Selecting "Show Me Everything" clears the others
         return isSelected ? [] : ['all'];
       }
-      // Selecting "mine" or "friends" removes "all"
       const updated = isSelected
         ? prev.filter((k) => k !== key)
         : [...prev.filter((k) => k !== 'all'), key];
@@ -71,11 +68,28 @@ export default function Dashboard() {
     hashtagFilter,
   });
 
+  const [recentSort, setRecentSort] = useState<"date" | "rating" | "name">("date");
+
+  const recentlyAdded = [...enrichedRestaurants]
+    .filter(r => new Date(r.createdAt) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
+    .sort((a, b) => {
+      if (recentSort === "rating") {
+        return (b.evaluation.finalEvaluation || 0) - (a.evaluation.finalEvaluation || 0);
+      } else if (recentSort === "name") {
+        return a.name.localeCompare(b.name);
+      } else {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+    })
+    .slice(0, 10);
+
   const myRestaurants = enrichedRestaurants.filter(r => r.owner?.id === currentUserId);
   const friendRestaurants = enrichedRestaurants.filter(r => friendIds.includes(r.owner?.id ?? -1));
-  const publicSuggestions = enrichedRestaurants.filter(r => r.privacyLevel !== PrivacyLevel.PRIVATE && r.owner?.id !== currentUserId && !friendIds.includes(r.owner?.id ?? -1));
-  const recentlyAdded = [...enrichedRestaurants].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10);
-
+  const publicSuggestions = enrichedRestaurants.filter(r =>
+    r.privacyLevel !== PrivacyLevel.PRIVATE &&
+    r.owner?.id !== currentUserId &&
+    !friendIds.includes(r.owner?.id ?? -1)
+  );
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -83,71 +97,26 @@ export default function Dashboard() {
     }
   }, [status, router]);
 
-  // Keep neighborhoods in sync with city filter and locations
   useEffect(() => {
     if (cityFilter) {
-      // Filter restaurants by selected city and get unique detailed locations
       const cityRestaurants = restaurants.filter(r => r.city === cityFilter);
-      const uniqueneighborhoods = [...new Set(cityRestaurants.map(r => r.neighborhood))].filter((location): location is string => Boolean(location));
+      const uniqueneighborhoods = [...new Set(cityRestaurants.map(r => r.neighborhood))].filter((n): n is string => typeof n === 'string');
       setNeighborhoodsState(uniqueneighborhoods);
-      // Clear detailed location filter if the current value is not available for the selected city
       if (neighborhoodFilter && !uniqueneighborhoods.includes(neighborhoodFilter)) {
         setneighborhoodFilter('');
       }
     } else {
-      // If no city is selected, show all unique detailed locations from all restaurants
-      const allneighborhoods = [...new Set(restaurants.map(r => r.neighborhood))].filter((location): location is string => Boolean(location));
+      const allneighborhoods = [...new Set(restaurants.map(r => r.neighborhood))].filter((n): n is string => typeof n === 'string');
       setNeighborhoodsState(allneighborhoods);
     }
   }, [cityFilter, restaurants, neighborhoodFilter]);
 
-  // Update detailed locations based on selected city filter
-  useEffect(() => {
-    if (cityFilter) {
-      // Filter restaurants by selected city and get unique detailed locations
-      const cityRestaurants = restaurants.filter(r => r.city === cityFilter);
-      const uniqueneighborhoods = [...new Set(cityRestaurants.map(r => r.neighborhood))].filter((location): location is string => Boolean(location));
-      // setNeighborhoods is now managed by useLocations, use setNeighborhoodsState for local UI
-
-      // Clear detailed location filter if the current value is not available for the selected city
-      if (neighborhoodFilter && !uniqueneighborhoods.includes(neighborhoodFilter)) {
-        setneighborhoodFilter('');
-      }
-    } else {
-      // If no city is selected, show all unique detailed locations from all restaurants
-      const allneighborhoods = [...new Set(restaurants.map(r => r.neighborhood))].filter((location): location is string => Boolean(location));
-      // setNeighborhoods is now managed by useLocations, use setNeighborhoodsState for local UI
-    }
-  }, [cityFilter, restaurants, neighborhoodFilter]);
-
-
-  const handleSave = async (restaurant: Restaurant) => {
-    const isEdit = restaurant.id > 0;
-    const endpoint = isEdit ? `/api/restaurants/${restaurant.id}` : '/api/restaurants';
-    const method = isEdit ? 'PUT' : 'POST';
-
-    try {
-      const res = await fetch(endpoint, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(restaurant),
-      });
-
-      if (!res.ok) throw new Error('Failed to save restaurant');
-
-      await refetch();
-      setShowModal(false);
-      setEditing(null);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const { handleSave } = useRestaurantActions(refetch, setShowModal, setEditing);
 
   const handleDelete = async (id: number) => {
     try {
       const res = await fetch(`/api/restaurants/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete restaurant');
-
       await refetch();
     } catch (error) {
       console.error('Error deleting restaurant:', error);
@@ -167,7 +136,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background">
       <DashboardHeader username={session?.user?.username ?? undefined} />
       <main className="container mx-auto px-4 py-8">
-        {/* Welcome Section */}
+        {/* Welcome */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
@@ -187,8 +156,10 @@ export default function Dashboard() {
             </Button>
           </div>
         </div>
+
         <DashboardStats restaurants={filteredRestaurants} />
-        {/* Filters Section */}
+
+        {/* Filters */}
         <div className="card-modern p-6 mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
@@ -226,6 +197,7 @@ export default function Dashboard() {
             />
           )}
         </div>
+
         <HorizontalRestaurantSection
           title="Recently Added"
           restaurants={recentlyAdded}
@@ -233,15 +205,19 @@ export default function Dashboard() {
           setEditing={setEditing}
           setShowModal={setShowModal}
           handleDelete={handleDelete}
+          showSort // ⬅️ Sorting enabled
         />
-      <HorizontalRestaurantSection
+
+        <HorizontalRestaurantSection
           title="Suggested for You"
           restaurants={publicSuggestions}
           currentUserId={currentUserId}
           setEditing={setEditing}
           setShowModal={setShowModal}
           handleDelete={handleDelete}
+          showSort // ⬅️ Sorting enabled
         />
+
         <HorizontalRestaurantSection
           title="My Restaurants"
           restaurants={myRestaurants}
@@ -249,7 +225,9 @@ export default function Dashboard() {
           setEditing={setEditing}
           setShowModal={setShowModal}
           handleDelete={handleDelete}
+          showSort // ⬅️ Sorting enabled
         />
+
         <HorizontalRestaurantSection
           title="Friends' Restaurants"
           restaurants={friendRestaurants}
@@ -257,13 +235,16 @@ export default function Dashboard() {
           setEditing={setEditing}
           setShowModal={setShowModal}
           handleDelete={handleDelete}
+          showSort // ⬅️ Sorting enabled
         />
+
+
 
         <RestaurantModal
           showModal={showModal}
           setShowModal={setShowModal}
           editing={editing}
-          onSubmit={useRestaurantActions(refetch, setShowModal, setEditing).handleSave}
+          onSubmit={handleSave}
         />
       </main>
     </div>
