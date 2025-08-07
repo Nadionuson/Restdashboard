@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   const { from, to, mode } = await req.json(); // mode = 'foot-walking' | 'driving-car'
-
+console.log('Received request:', { from, to, mode });
 
   if (!from || !to) {
     return NextResponse.json({ error: 'Missing coordinates' }, { status: 400 });
@@ -18,8 +18,8 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         coordinates: [
-          [8.681495, 49.41461],
-          [8.687872, 49.420318],
+          [from.lng, from.lat],
+          [to.lng, to.lat],
         ],
       }),
     });
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await res.json();
-    console.log('Route data:', data.routes[0].segments[0]);
+    
     const distanceKm = data.routes[0].segments[0].distance / 1000;
     const durationMin = data.routes[0].segments[0].duration / 60;
 

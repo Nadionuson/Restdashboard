@@ -49,7 +49,10 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
   const [routeInfo, setRouteInfo] = useState<string | null>(null);
   const [loadingRoute, setLoadingRoute] = useState(false);
 
-  const [showExtras, setShowExtras] = useState(false);
+  const to = {
+  lat: parseFloat(geoCoordinates.latitude),
+  lng: parseFloat(geoCoordinates.longitude),
+};
 
   useEffect(() => {
     const fetchHashtags = async () => {
@@ -67,6 +70,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
 
   useEffect(() => {
     if (initialData) {
+      console.log('Initial data loaded:', initialData);
       setName(initialData.name);
       setCity(initialData.city || '');
       setNeighborhood(initialData.neighborhood || '');
@@ -80,6 +84,10 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       setAddress(String(initialData.contactDetail?.address ?? ""));
       setPhoneNumber(String(initialData.contactDetail?.phoneNumber ?? ""));
       setOpeningHours(String(initialData.contactDetail?.openingHours ?? ""));
+      setGeoCoordinates({
+       latitude: String(initialData.contactDetail?.latitude ?? ''),
+        longitude: String(initialData.contactDetail?.longitude ?? ''),
+    });
     }
   }, [initialData]);
 
@@ -138,7 +146,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
         setAddress(data.address ?? '');
         setPhoneNumber(data.phoneNumber ?? '');
         setOpeningHours(data.openingHours ?? '');
-        setGeoCoordinates(data.geoCoordinates ?? { latitude: '', longitude: '' });
+        //setGeoCoordinates(data.geoCoordinates ?? { latitude: '', longitude: '' });
       } else {
         console.error(data.error);
         alert('Failed to refresh additional info.');
@@ -152,58 +160,54 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
   };
 
   const handleRouteCheck = async () => {
-    if (!city || !neighborhood) {
-      alert('Missing destination info');
-      return;
+  if (!geoCoordinates.latitude || !geoCoordinates.longitude) {
+    alert('Missing destination coordinates');
+    return;
+  }
+
+  if (!navigator.geolocation) {
+    alert('Geolocation not supported by your browser');
+    return;
+  }
+
+  setLoadingRoute(true);
+  setRouteInfo(null);
+
+  navigator.geolocation.getCurrentPosition(async (position) => {
+    const from = {
+      lat: position.coords.latitude,
+      lng: position.coords.longitude,
+    };
+
+    try {
+      const res = await fetch('/api/route', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from,
+          to: {
+            lat: parseFloat(geoCoordinates.latitude),
+            lng: parseFloat(geoCoordinates.longitude),
+          },
+          mode: 'driving-car',
+        }),
+      });
+
+      const data = await res.json();
+      setRouteInfo(
+        res.ok
+          ? `~${data.distanceKm} km, ~${data.durationMin} min (driving)`
+          : 'Failed to calculate route'
+      );
+    } catch (err) {
+      console.error(err);
+      setRouteInfo('Something went wrong.');
+    } finally {
+      setLoadingRoute(false);
     }
+  });
+};
 
-    if (!navigator.geolocation) {
-      alert('Geolocation not supported by your browser');
-      return;
-    }
-
-    setLoadingRoute(true);
-    setRouteInfo(null);
-
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      const from = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-      };
-
-      try {
-        const geocodeRes = await fetch(
-          `https://nominatim.openstreetmap.org/search?street=${encodeURIComponent(neighborhood)}&city=${encodeURIComponent(city)}&format=json&limit=1`
-        );
-        const geoData = await geocodeRes.json();
-
-        if (!geoData?.[0]) {
-          setRouteInfo('Destination address not found');
-          setLoadingRoute(false);
-          return;
-        }
-
-        const to = {
-          lat: parseFloat(geoData[0].lat),
-          lng: parseFloat(geoData[0].lon),
-        };
-
-        const res = await fetch('/api/route', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ from, to, mode: 'driving-car' }),
-        });
-
-        const data = await res.json();
-        setRouteInfo(res.ok ? `~${data.distanceKm} km, ~${data.durationMin} min (driving)` : 'Failed to calculate route');
-      } catch (err) {
-        console.error(err);
-        setRouteInfo('Something went wrong.');
-      } finally {
-        setLoadingRoute(false);
-      }
-    });
-  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">

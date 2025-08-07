@@ -84,12 +84,11 @@ export default function Dashboard() {
     .slice(0, 10);
 
   const myRestaurants = enrichedRestaurants.filter(r => r.owner?.id === currentUserId);
-  const friendRestaurants = enrichedRestaurants.filter(r => friendIds.includes(r.owner?.id ?? -1));
   const publicSuggestions = enrichedRestaurants.filter(r =>
-    r.privacyLevel !== PrivacyLevel.PRIVATE &&
-    r.owner?.id !== currentUserId &&
-    !friendIds.includes(r.owner?.id ?? -1)
+    r.privacyLevel === PrivacyLevel.PUBLIC &&
+    r.owner?.id !== currentUserId
   );
+
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -228,18 +227,7 @@ export default function Dashboard() {
           showSort // ⬅️ Sorting enabled
         />
 
-        <HorizontalRestaurantSection
-          title="Friends' Restaurants"
-          restaurants={friendRestaurants}
-          currentUserId={currentUserId}
-          setEditing={setEditing}
-          setShowModal={setShowModal}
-          handleDelete={handleDelete}
-          showSort // ⬅️ Sorting enabled
-        />
-
-
-
+       
         <RestaurantModal
           showModal={showModal}
           setShowModal={setShowModal}

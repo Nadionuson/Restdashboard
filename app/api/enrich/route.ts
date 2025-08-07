@@ -8,20 +8,20 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const geminiRes = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': process.env.GEMINI_API_KEY!,
-        },
-        body: JSON.stringify({
-          contents: [
+   const geminiRes = await fetch(
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+  {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': process.env.GEMINI_API_KEY!,
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [
             {
-              parts: [
-                {
-                  text: `
+              text: `
 You are a helpful assistant. A user is entering a restaurant into their system.
 Given the following details:
 
@@ -48,14 +48,43 @@ Return ONLY a JSON object with the following exact structure. Do NOT explain, do
     "longitude": "..."
   }
 }
-                  `.trim(),
-                },
-              ],
+              `.trim(),
             },
           ],
-        }),
-      }
-    );
+        },
+      ],
+      tools: [
+    { google_search: {} } // 👈 Enables real-time search
+  ],
+      generationConfig: {
+        temperature: 0.7,
+        topK: 32,
+        topP: 1,
+        maxOutputTokens: 1024,
+        stopSequences: [],
+      },
+      safetySettings: [
+        {
+          category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+          threshold: 'BLOCK_NONE',
+        },
+        {
+          category: 'HARM_CATEGORY_HARASSMENT',
+          threshold: 'BLOCK_NONE',
+        },
+        {
+          category: 'HARM_CATEGORY_HATE_SPEECH',
+          threshold: 'BLOCK_NONE',
+        },
+        {
+          category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+          threshold: 'BLOCK_NONE',
+        },
+      ],
+    }),
+  }
+);
+
 
     const geminiJson = await geminiRes.json();
     const text = geminiJson?.candidates?.[0]?.content?.parts?.[0]?.text;
