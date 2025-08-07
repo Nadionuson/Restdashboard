@@ -23,6 +23,7 @@
       include: { 
         evaluation: true, 
         hashtags: true, 
+        contactDetail: true,
         owner: {
           select: {
             email: true,
@@ -81,9 +82,6 @@
           neighborhood: data.neighborhood || data.city,  // Handle optional neighborhood
           status: data.status,
           highlights: data.highlights,
-          address: data.address,
-          phoneNumber: data.phoneNumber,
-          openingHours: data.openingHours,
           ownerId: user.id,
           privacyLevel: data.privacyLevel ?? "PUBLIC",
           hashtags: {
@@ -91,6 +89,16 @@
               where: { name: tag.name.toLowerCase().trim() },
               create: { name: tag.name.toLowerCase().trim() },  // Fixed here with the parentheses
             })),
+          },
+          contactDetail: {
+            create: {
+              address: data.address,
+              latitude: data.latitude,
+              longitude: data.longitude,
+              phoneNumber: data.phoneNumber,
+              website: data.website,
+              openingHours: data.openingHours,
+            },
           },
           evaluation: {
             create: {

@@ -77,9 +77,9 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       setPrivacyLevel(initialData.privacyLevel ?? 'PUBLIC');
       setCreatedAt(initialData.createdAt);
       setUpdatedAt(initialData.updatedAt);
-      setAddress(initialData.address ?? '');
-      setPhoneNumber(initialData.phoneNumber ?? '');
-      setOpeningHours(initialData.openingHours ?? '');
+      setAddress(String(initialData.contactDetail?.address ?? ""));
+      setPhoneNumber(String(initialData.contactDetail?.phoneNumber ?? ""));
+      setOpeningHours(String(initialData.contactDetail?.openingHours ?? ""));
     }
   }, [initialData]);
 
@@ -109,9 +109,14 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
       privacyLevel,
       createdAt,
       updatedAt,
-      address,
-      phoneNumber,
-      openingHours,
+      contactDetail: {
+        address,
+        latitude: geoCoordinates.latitude,
+        longitude: geoCoordinates.longitude,
+        phoneNumber,
+        website: '', // Assuming website is not provided in the form
+        openingHours,
+      },
     };
     onSubmit(newRestaurant);
   };

@@ -7,6 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model ContactDetails {
+  id          Int          @id @default(autoincrement())
+  address     String?
+  latitude    String?
+  longitude   String?
+  phoneNumber String?
+  website      String?
+  openingHours String?
+  restaurantId       Int        @unique
+  restaurant         Restaurant @relation(fields: [restaurantId], references: [id])
+}
+
 model Restaurant {
   id           Int          @id @default(autoincrement())
   name         String
@@ -18,10 +30,7 @@ model Restaurant {
   ownerId      Int?
   privacyLevel PrivacyLevel @default(PUBLIC)
   neighborhood String?
-  address      String?
-  phoneNumber  String?
-  website      String?
-  openingHours String?
+  contactDetail ContactDetails?
   comments     Comment[]
   evaluation   Evaluation?
   owner        User?        @relation(fields: [ownerId], references: [id])

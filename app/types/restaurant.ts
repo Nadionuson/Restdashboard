@@ -7,6 +7,15 @@ export type Evaluation = {
   finalEvaluation: number;
 };
 
+export type ContactDetails = {
+  address: String;
+  latitude: String;
+  longitude: String;
+  phoneNumber: String;
+  website: String;
+  openingHours: String;
+};
+
 export type RestaurantStatus = 'Want to go' | 'Tried it';
 
 export enum PrivacyLevel {
@@ -34,9 +43,7 @@ export type Restaurant = {
   status: RestaurantStatus;
   evaluation: Evaluation;
   highlights: string;
-  address: string;
-  phoneNumber: string;
-  openingHours: string;
+  contactDetail?: ContactDetails;
   hashtags?: Hashtag[];
   privacyLevel: PrivacyLevel;
   owner?: User;  // Include user info
