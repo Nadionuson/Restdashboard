@@ -1,18 +1,16 @@
-'use client';
-
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Restaurant } from '@/app/types/restaurant';
 import { RestaurantCard } from '../RestaurantCard';
 import { SortDropdown } from '@/components/SortDropDown';
-import { useState, useMemo } from 'react';
 
 interface HorizontalRestaurantSectionProps {
   title: string;
   restaurants: Restaurant[];
   currentUserId?: number;
-  setEditing: (restaurant: Restaurant | null) => void; // <-- allow null
+  setEditing: (restaurant: Restaurant | null) => void;
   setShowModal: (show: boolean) => void;
   handleDelete: (id: number) => void;
-  showSort?: boolean; // ⬅️ NEW
+  showSort?: boolean;
 }
 
 export function HorizontalRestaurantSection({
@@ -25,6 +23,7 @@ export function HorizontalRestaurantSection({
   showSort = false,
 }: HorizontalRestaurantSectionProps) {
   const [sort, setSort] = useState<'date' | 'rating' | 'name'>('date');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const sortedRestaurants = useMemo(() => {
     return [...restaurants].sort((a, b) => {
@@ -38,6 +37,12 @@ export function HorizontalRestaurantSection({
     });
   }, [restaurants, sort]);
 
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollLeft = 0;
+    }
+  }, [sort]);
+
   if (restaurants.length === 0) return null;
 
   return (
@@ -46,7 +51,10 @@ export function HorizontalRestaurantSection({
         <h3 className="text-lg font-semibold">{title}</h3>
         {showSort && <SortDropdown value={sort} onChange={setSort} />}
       </div>
-      <div className="flex space-x-4 overflow-x-auto py-2">
+      <div
+        ref={scrollContainerRef}
+        className="flex space-x-4 overflow-x-auto py-2"
+      >
         {sortedRestaurants.map((restaurant) => (
           <RestaurantCard
             key={restaurant.id}

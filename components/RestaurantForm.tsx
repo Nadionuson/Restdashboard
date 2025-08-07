@@ -43,6 +43,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
   const [address, setAddress] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [openingHours, setOpeningHours] = useState('');
+  const [geoCoordinates, setGeoCoordinates] = useState<{ latitude: string; longitude: string }>({ latitude: '', longitude: '' });
   const [loadingDetails, setLoadingDetails] = useState(false);
 
   const [routeInfo, setRouteInfo] = useState<string | null>(null);
@@ -132,6 +133,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
         setAddress(data.address ?? '');
         setPhoneNumber(data.phoneNumber ?? '');
         setOpeningHours(data.openingHours ?? '');
+        setGeoCoordinates(data.geoCoordinates ?? { latitude: '', longitude: '' });
       } else {
         console.error(data.error);
         alert('Failed to refresh additional info.');
