@@ -126,7 +126,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
         latitude: geoCoordinates.latitude,
         longitude: geoCoordinates.longitude,
         phoneNumber,
-        website: '', // Assuming website is not provided in the form
+        website: initialData?.contactDetail?.website || '', 
         openingHours,
       },
     };
@@ -335,7 +335,7 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
               <span className="text-gray-600">⛔ Awaiting for AI</span>
             )}
           </div>
-
+ 
           <div className="flex items-center gap-2">
             <Button
               type="button"

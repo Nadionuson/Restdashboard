@@ -74,7 +74,7 @@ console.log('data:', data);
         contactDetail: currentRestaurant?.contactDetail
           ? {
               update: {
-                phoneNumber: data.contactDetail.phone,
+                phoneNumber: data.contactDetail.phoneNumber,
                 website: data.contactDetail.website,
                 address: data.contactDetail.address,
                 latitude: data.contactDetail.latitude,
@@ -84,7 +84,7 @@ console.log('data:', data);
             }
           : {
               create: {
-                phoneNumber: data.contactDetail.phone,
+                phoneNumber: data.contactDetail.phoneNumber,
                 website: data.contactDetail.website,
                 address: data.contactDetail.address,
                 latitude: data.contactDetail.latitude,
@@ -117,7 +117,7 @@ console.log('data:', data);
       message: `Restaurant ${restaurantId} updated`,
       data: updated,
       
-    });
+    }); 
   } catch (error) {
     console.error('[PUT /api/restaurants/[id]]', error);
     return NextResponse.json({ error: 'Failed to update restaurant' }, { status: 500 });
