@@ -17,8 +17,8 @@ import { DashboardSearchBar } from '@/components/Dashboard/DashboardSearchBar';
 import { useDashboardFilters } from '@/app/hooks/useDashboardFilters';
 import { useLocations } from '@/app/hooks/useLocations';
 import { useRestaurantActions } from '@/app/hooks/useRestaurantActions';
-import { HorizontalRestaurantSection } from '@/components/Dashboard/HoriontalRestaurantSection';
-import { SortDropdown } from '@/components/SortDropDown';
+import { RestaurantCard } from '@/components/RestaurantCard';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Dashboard() {
   const { restaurants, refetch } = useRestaurants();
@@ -28,7 +28,7 @@ export default function Dashboard() {
   const { cities } = useLocations();
   const [cityFilter, setCityFilter] = useState('');
   const [neighborhoodsState, setNeighborhoodsState] = useState<string[]>([]);
-  const [neighborhoodFilter, setneighborhoodFilter] = useState('');
+  const [neighborhoodFilter, setNeighborhoodFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [finalEvaluationFilter, setFinalEvaluationFilter] = useState('');
   const [nameSearchFilter, setNameSearchFilter] = useState('');
@@ -68,14 +68,14 @@ export default function Dashboard() {
     hashtagFilter,
   });
 
-  const [recentSort, setRecentSort] = useState<"date" | "rating" | "name">("date");
+  const [recentSort, setRecentSort] = useState<'date' | 'rating' | 'name'>('date');
 
   const recentlyAdded = [...enrichedRestaurants]
     .filter(r => new Date(r.createdAt) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
     .sort((a, b) => {
-      if (recentSort === "rating") {
+      if (recentSort === 'rating') {
         return (b.evaluation.finalEvaluation || 0) - (a.evaluation.finalEvaluation || 0);
-      } else if (recentSort === "name") {
+      } else if (recentSort === 'name') {
         return a.name.localeCompare(b.name);
       } else {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -89,6 +89,7 @@ export default function Dashboard() {
     r.owner?.id !== currentUserId
   );
 
+  const [activeTab, setActiveTab] = useState<'all' | 'mine' | 'recent' | 'suggestions'>('all');
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -99,14 +100,14 @@ export default function Dashboard() {
   useEffect(() => {
     if (cityFilter) {
       const cityRestaurants = restaurants.filter(r => r.city === cityFilter);
-      const uniqueneighborhoods = [...new Set(cityRestaurants.map(r => r.neighborhood))].filter((n): n is string => typeof n === 'string');
-      setNeighborhoodsState(uniqueneighborhoods);
-      if (neighborhoodFilter && !uniqueneighborhoods.includes(neighborhoodFilter)) {
-        setneighborhoodFilter('');
+      const uniqueNeighborhoods = [...new Set(cityRestaurants.map(r => r.neighborhood))].filter((n): n is string => typeof n === 'string');
+      setNeighborhoodsState(uniqueNeighborhoods);
+      if (neighborhoodFilter && !uniqueNeighborhoods.includes(neighborhoodFilter)) {
+        setNeighborhoodFilter('');
       }
     } else {
-      const allneighborhoods = [...new Set(restaurants.map(r => r.neighborhood))].filter((n): n is string => typeof n === 'string');
-      setNeighborhoodsState(allneighborhoods);
+      const allNeighborhoods = [...new Set(restaurants.map(r => r.neighborhood))].filter((n): n is string => typeof n === 'string');
+      setNeighborhoodsState(allNeighborhoods);
     }
   }, [cityFilter, restaurants, neighborhoodFilter]);
 
@@ -122,6 +123,13 @@ export default function Dashboard() {
       router.push('/error');
     }
   };
+
+  // Determine which visibility filter keys to hide based on active tab
+  const excludeVisibilityKeys = (() => {
+    if (activeTab === 'mine') return ['all', 'friends', 'mine']; // hide all filters on "My Restaurants"
+    if (activeTab === 'suggestions') return ['mine']; // hide 'mine' on Suggestions tab
+    return []; // show all on others
+  })();
 
   if (status === 'loading') {
     return (
@@ -174,60 +182,149 @@ export default function Dashboard() {
               {showFilters ? 'Hide' : 'Show'} Filters
             </Button>
           </div>
-          <DashboardQuickFilters visibilityFilters={visibilityFilters} toggleFilter={toggleFilter} />
-          <DashboardSearchBar value={nameSearchFilter} onChange={setNameSearchFilter} />
           {showFilters && (
-            <DashboardFilters
-              cities={cities}
-              cityFilter={cityFilter}
-              setCityFilter={setCityFilter}
-              neighborhoods={neighborhoodsState}
-              neighborhoodFilter={neighborhoodFilter}
-              setneighborhoodFilter={setneighborhoodFilter}
-              statusFilter={statusFilter}
-              setStatusFilter={setStatusFilter}
-              finalEvaluationFilter={finalEvaluationFilter}
-              setFinalEvaluationFilter={setFinalEvaluationFilter}
-              nameSearchFilter={nameSearchFilter}
-              setNameSearchFilter={setNameSearchFilter}
-              hashtagFilter={hashtagFilter}
-              setHashtagFilter={setHashtagFilter}
-              allHashtags={allHashtags}
-            />
+            <>
+              {/* Pass excludeKeys to hide some visibility filters */}
+              <DashboardQuickFilters
+                visibilityFilters={visibilityFilters}
+                toggleFilter={toggleFilter}
+                excludeKeys={excludeVisibilityKeys}
+              />
+              <DashboardSearchBar value={nameSearchFilter} onChange={setNameSearchFilter} />
+              <DashboardFilters
+                cities={cities}
+                cityFilter={cityFilter}
+                setCityFilter={setCityFilter}
+                neighborhoods={neighborhoodsState}
+                neighborhoodFilter={neighborhoodFilter}
+                setneighborhoodFilter={setNeighborhoodFilter}
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+                finalEvaluationFilter={finalEvaluationFilter}
+                setFinalEvaluationFilter={setFinalEvaluationFilter}
+                nameSearchFilter={nameSearchFilter}
+                setNameSearchFilter={setNameSearchFilter}
+                hashtagFilter={hashtagFilter}
+                setHashtagFilter={setHashtagFilter}
+                allHashtags={allHashtags}
+              />
+            </>
           )}
         </div>
 
-        <HorizontalRestaurantSection
-          title="Recently Added"
-          restaurants={recentlyAdded}
-          currentUserId={currentUserId}
-          setEditing={setEditing}
-          setShowModal={setShowModal}
-          handleDelete={handleDelete}
-          showSort // ⬅️ Sorting enabled
-        />
+        {/* Tabs */}
+        <div className="mb-6 flex space-x-6 border-b border-muted pb-2">
+          {[
+            { key: 'all', label: 'All Restaurants' },
+            { key: 'mine', label: 'My Restaurants' },
+            { key: 'recent', label: 'Recently Added' },
+            { key: 'suggestions', label: 'Suggestions' },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key as typeof activeTab)}
+              className={`pb-2 font-semibold ${
+                activeTab === key
+                  ? 'border-b-2 border-primary text-primary'
+                  : 'text-muted-foreground hover:text-primary'
+              } transition-colors duration-150`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
-        <HorizontalRestaurantSection
-          title="Suggested for You"
-          restaurants={publicSuggestions}
-          currentUserId={currentUserId}
-          setEditing={setEditing}
-          setShowModal={setShowModal}
-          handleDelete={handleDelete}
-          showSort // ⬅️ Sorting enabled
-        />
+        {/* Animated tab contents */}
+        <AnimatePresence mode="wait">
+          {activeTab === 'all' && (
+            <motion.div
+              key="all"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
+            >
+              {filteredRestaurants.map((restaurant) => (
+                <RestaurantCard
+                  key={restaurant.id}
+                  restaurant={restaurant}
+                  currentUserId={currentUserId}
+                  setEditing={setEditing}
+                  setShowModal={setShowModal}
+                  handleDelete={handleDelete}
+                />
+              ))}
+            </motion.div>
+          )}
 
-        <HorizontalRestaurantSection
-          title="My Restaurants"
-          restaurants={myRestaurants}
-          currentUserId={currentUserId}
-          setEditing={setEditing}
-          setShowModal={setShowModal}
-          handleDelete={handleDelete}
-          showSort // ⬅️ Sorting enabled
-        />
+          {activeTab === 'mine' && (
+            <motion.div
+              key="mine"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
+            >
+              {myRestaurants.map((restaurant) => (
+                <RestaurantCard
+                  key={restaurant.id}
+                  restaurant={restaurant}
+                  currentUserId={currentUserId}
+                  setEditing={setEditing}
+                  setShowModal={setShowModal}
+                  handleDelete={handleDelete}
+                />
+              ))}
+            </motion.div>
+          )}
 
-       
+          {activeTab === 'recent' && (
+            <motion.div
+              key="recent"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
+            >
+              {recentlyAdded.map((restaurant) => (
+                <RestaurantCard
+                  key={restaurant.id}
+                  restaurant={restaurant}
+                  currentUserId={currentUserId}
+                  setEditing={setEditing}
+                  setShowModal={setShowModal}
+                  handleDelete={handleDelete}
+                />
+              ))}
+            </motion.div>
+          )}
+
+          {activeTab === 'suggestions' && (
+            <motion.div
+              key="suggestions"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
+            >
+              {publicSuggestions.map((restaurant) => (
+                <RestaurantCard
+                  key={restaurant.id}
+                  restaurant={restaurant}
+                  currentUserId={currentUserId}
+                  setEditing={setEditing}
+                  setShowModal={setShowModal}
+                  handleDelete={handleDelete}
+                />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <RestaurantModal
           showModal={showModal}
           setShowModal={setShowModal}

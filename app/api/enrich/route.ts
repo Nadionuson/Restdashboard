@@ -34,7 +34,10 @@ Return the following details based on a quick online search:
 - Official website (if available)
 - Phone Number for reservations
 - Working hours
-- Geo Coordinates (latitude and longitude)
+- Latitude and longitude coordinates in decimal degrees with at least 5 decimal places
+- Direct link for online reservation(if available)  
+
+If exact coordinates are not available from official sources, please provide approximate coordinates based on the street address or reliable geocoding.
 
 Return ONLY a JSON object with the following exact structure. Do NOT explain, do NOT wrap in a code block, do NOT add markdown:
 
@@ -46,7 +49,8 @@ Return ONLY a JSON object with the following exact structure. Do NOT explain, do
   "geoCoordinates": {
     "latitude": "...",
     "longitude": "..."
-  }
+  },
+ "Online Reservation": "..." 
 }
               `.trim(),
             },

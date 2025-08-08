@@ -61,7 +61,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         return existing ?? await prisma.hashtag.create({ data: { name } });
       })
     );
-
+console.log('data:', data);
     const updated = await prisma.restaurant.update({
       where: { id: restaurantId },
       data: {
@@ -112,15 +112,17 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       },
       include: { evaluation: true, hashtags: true, contactDetail: true },
     });
-
+      
     return NextResponse.json({
       message: `Restaurant ${restaurantId} updated`,
       data: updated,
+      
     });
   } catch (error) {
     console.error('[PUT /api/restaurants/[id]]', error);
     return NextResponse.json({ error: 'Failed to update restaurant' }, { status: 500 });
   }
+
 }
 
 // DELETE: Delete a restaurant and its related records, but keep hashtags
