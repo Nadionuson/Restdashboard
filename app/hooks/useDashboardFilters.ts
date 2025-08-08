@@ -50,6 +50,7 @@ export function useDashboardFilters({
     const matchesCity = cityFilter ? r.city === cityFilter : true;
     const matchesNeighborhood = neighborhoodFilter ? r.neighborhood === neighborhoodFilter : true;
     const matchesStatus = statusFilter ? r.status === statusFilter : true;
+    console.log(statusFilter, r.status);
     const matchesFinalEvaluation = finalEvaluationFilter
       ? r.evaluation.finalEvaluation >= Number(finalEvaluationFilter)
       : true;

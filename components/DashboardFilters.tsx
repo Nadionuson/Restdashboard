@@ -114,9 +114,8 @@ export const DashboardFilters: React.FC<DashboardFiltersProps> = ({
             className="input-modern"
           >
             <option value="">All Status</option>
-            <option value="visited">Visited</option>
-            <option value="want to visit">Want to Visit</option>
-            <option value="not recommended">Not Recommended</option>
+            <option value="Tried it">Visited</option>
+            <option value="Want to go">Want to Visit</option>
           </select>
         </div>
 

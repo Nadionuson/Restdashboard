@@ -165,11 +165,14 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
   };
 
   const handleRouteCheck = async () => {
-    if (!city || !neighborhood) {
+    
+
+    if (!geoCoordinates || !geoCoordinates.latitude || !geoCoordinates.longitude) {
       alert('Missing destination info');
       return;
     }
 
+    console.log(geoCoordinates)
     if (!navigator.geolocation) {
       alert('Geolocation not supported by your browser');
       return;
@@ -185,23 +188,12 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({ initialData, onS
           lng: position.coords.longitude,
         };
 
-        try {
-          const geocodeRes = await fetch(
-            `https://nominatim.openstreetmap.org/search?street=${encodeURIComponent(neighborhood)}&city=${encodeURIComponent(city)}&format=json&limit=1`
-          );
-          const geoData = await geocodeRes.json();
-
-          if (!geoData?.[0]) {
-            setRouteInfo('Destination address not found');
-            setLoadingRoute(false);
-            return;
-          }
-
-          const to = {
-            lat: parseFloat(geoData[0].lat),
-            lng: parseFloat(geoData[0].lon),
+        const to = {
+            lat: parseFloat(geoCoordinates.latitude),
+            lng: parseFloat(geoCoordinates.longitude),
           };
 
+        try {
           const res = await fetch('/api/route', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

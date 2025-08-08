@@ -1,7 +1,8 @@
 import { Restaurant, PrivacyLevel } from "@/app/types/restaurant";
-import { Star, MapPin, Calendar, User, Eye, Hash, Edit, Trash2 } from "lucide-react";
+import { Star, MapPin, Calendar, User, Eye, Hash, Edit, Trash2, Cpu, Phone, Clock } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
+
 
 type Props = {
   restaurant: Restaurant;
@@ -47,14 +48,33 @@ export const RestaurantCard: React.FC<Props> = ({
           setShowModal(true);
         }
       }}
-      className={`bg-white p-4 rounded-lg shadow-md cursor-pointer transition-all group ${
-        isOwner ? "hover:shadow-lg hover:-translate-y-1" : "opacity-70 pointer-events-none"
-      }`}
+      className={`bg-white p-4 rounded-lg shadow-md cursor-pointer transition-all group ${isOwner ? "hover:shadow-lg hover:-translate-y-1" : "opacity-70 pointer-events-none"
+        }`}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1 min-w-0">
           <h3 className="text-lg font-semibold truncate">{restaurant.name}</h3>
+          {restaurant.contactDetail?.address && (
+            <span title="Address available" aria-label="Address available" className="inline-block">
+              <Cpu className="w-5 h-5 text-indigo-600" />
+            </span>
+          )}
+          {restaurant.contactDetail?.phoneNumber && (
+            <span title="Phone number available" aria-label="Phone number available" className="inline-block">
+              <Phone className="w-5 h-5 text-green-600" />
+            </span>
+          )}
+          {restaurant.contactDetail?.openingHours && (
+            <span title="Schedule available" aria-label="Schedule available" className="inline-block">
+              <Clock className="w-5 h-5 text-green-600" />
+            </span>
+          )}
+          {restaurant.contactDetail?.latitude && (
+            <span title="Geocoordinates available" aria-label="Geocoordinates available" className="inline-block">
+              <MapPin className="w-5 h-5 text-green-600" />
+            </span>
+          )}
           <div className="flex items-center space-x-2 text-sm text-gray-500">
             <MapPin className="w-4 h-4" />
             <span>{restaurant.city}</span>
