@@ -14,7 +14,7 @@
     const userId = session?.user?.id; 
     
     const restaurants = await prisma.restaurant.findMany({
-      where:{
+      where:{ isActive: true,
         OR: [
           { ownerId: Number(userId) },          // Your own
           { privacyLevel : "PUBLIC" }                   // Public others

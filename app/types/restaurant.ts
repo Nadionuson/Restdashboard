@@ -49,6 +49,7 @@ export type Restaurant = {
   owner?: User;  // Include user info
   createdAt: string | Date;
   updatedAt: string | Date;
+  isActive?: boolean;
 };
 
 // Helper function to calculate the final evaluation

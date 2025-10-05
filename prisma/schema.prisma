@@ -35,6 +35,7 @@ model Restaurant {
   evaluation   Evaluation?
   owner        User?        @relation(fields: [ownerId], references: [id])
   hashtags     Hashtag[]    @relation("RestaurantHashtags")
+  isActive     Boolean      @default(true) // Soft-delete flag
 }
 
 model Evaluation {

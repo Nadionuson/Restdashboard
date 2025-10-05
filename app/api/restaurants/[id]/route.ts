@@ -125,36 +125,43 @@ console.log('data:', data);
 
 }
 
-// DELETE: Delete a restaurant and its related records, but keep hashtags
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+// DELETE: Soft-delete a restaurant
+// DELETE: Soft-delete (logical) a restaurant by marking it inactive
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const { id } = await params;
   const restaurantId = parseInt(id, 10);
 
   try {
-    const restaurant = await prisma.restaurant.findUnique({
+    // ensure restaurant exists
+    const existing = await prisma.restaurant.findUnique({
       where: { id: restaurantId },
-      include: { hashtags: true },
+      select: { id: true, isActive: true },
     });
 
-    if (restaurant?.hashtags?.length) {
-      await prisma.restaurant.update({
-        where: { id: restaurantId },
-        data: {
-          hashtags: {
-            disconnect: restaurant.hashtags.map((tag) => ({ id: tag.id })),
-          },
-        },
-      });
+    if (!existing) {
+      return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 });
     }
 
-    await prisma.evaluation.deleteMany({ where: { restaurantId } });
-    const deletedRestaurant = await prisma.restaurant.delete({
+    // If already inactive, we can return 200 or 204
+    if (existing.isActive === false) {
+      return NextResponse.json({ success: true, message: 'Restaurant already inactive' });
+    }
+
+    const updated = await prisma.restaurant.update({
       where: { id: restaurantId },
+      data: {
+        isActive: false,
+        // optionally also update "status" to a domain-specific value
+        // status: 'INACTIVE',
+      },
     });
 
-    return NextResponse.json({ success: true, deleted: deletedRestaurant });
+    return NextResponse.json({ success: true, restaurant: updated });
   } catch (error) {
     console.error('[DELETE /api/restaurants/[id]]', error);
-    return NextResponse.json({ error: 'Failed to delete restaurant' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to soft-delete restaurant' }, { status: 500 });
   }
 }
